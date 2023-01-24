@@ -20,8 +20,8 @@ class DFABuilder<A> {
         finalStates.add(state)
     }
 
-    fun build(): DFA<A> = cutStatesThatDoNotLeadToFinalStates(
-        DFA(
+    fun build(): DFA<A, State> = cutStatesThatDoNotLeadToFinalStates(
+        DFAImpl(
             startState = 0,
             finalStates = finalStates.toSet(),
             transitions = transitions
@@ -29,15 +29,15 @@ class DFABuilder<A> {
     )
 }
 
-fun <A> dfa(buildFunction: DFABuilder<A>.() -> Unit): DFA<A> =
+fun <A> dfa(buildFunction: DFABuilder<A>.() -> Unit): DFA<A, State> =
     DFABuilder<A>().also { it.buildFunction() }.build()
 
 // Cut states that do not lead to final state
-private fun <A> cutStatesThatDoNotLeadToFinalStates(dfa: DFA<A>): DFA<A> {
-    val reverseEdges = Array(dfa.transitions.size) { HashSet<State>() }
-    dfa.transitions.forEachIndexed { from, transitions ->
-        transitions.forEach { (_, to) ->
-            reverseEdges[to].add(from)
+private fun <A> cutStatesThatDoNotLeadToFinalStates(dfa: DFA<A, State>): DFA<A, State> {
+    val reverseEdges = Array(dfa.statesCount) { HashSet<State>() }
+    (0 until dfa.statesCount).forEach { state ->
+        dfa.transitionsFrom(state).forEach { (_, to) ->
+            reverseEdges[to].add(state)
         }
     }
 
@@ -54,20 +54,20 @@ private fun <A> cutStatesThatDoNotLeadToFinalStates(dfa: DFA<A>): DFA<A> {
 
     return when {
         dfa.startState !in visited -> emptyDFA()
-        visited.size == dfa.transitions.size -> dfa
+        visited.size == dfa.statesCount -> dfa
         else -> {
             val renumbering = visited
                 .sorted()
                 .withIndex()
                 .associate { it.value to it.index }
 
-            DFA(
+            DFAImpl(
                 0,
                 dfa.finalStates.map(renumbering::getValue).toSet(),
-                dfa.transitions
-                    .filterIndexed { index, _ -> index in visited }
-                    .map { transitions ->
-                        transitions
+                (0 until dfa.statesCount)
+                    .filter { it in visited }
+                    .map { state ->
+                        dfa.transitionsFrom(state)
                             .filterValues { it in renumbering }
                             .mapValues { (_, to) -> renumbering.getValue(to) }
                     }

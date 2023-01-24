@@ -55,7 +55,7 @@ object Fixtures {
         markAsFinal(odd)
     }
 
-    fun divisibilityBy(n: Int): DFA<Char> = dfa {
+    fun divisibilityBy(n: Int): DFA<Char, State> = dfa {
         val remainders = Array(n) { if (it == 0) startState else newState() }
 
         for (remainder in 0 until n) {

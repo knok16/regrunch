@@ -2,14 +2,14 @@ package dfa
 
 import java.util.*
 
-fun DFA<Char>.allStringsAlphabetically(): Sequence<String> = sequence {
-    val callstack = Stack<Iterator<Pair<Char, State>>>()
+fun <S> DFA<Char, S>.allStringsAlphabetically(): Sequence<String> = sequence {
+    val callstack = Stack<Iterator<Pair<Char, S>>>()
 
     val prefix = CharArray(100)
 
     // TODO optimize to sort once and lazily
-    fun getIteratorFor(state: State): Iterator<Pair<Char, State>> =
-        transitions[state].toList().sortedBy { (char, _) -> char }.iterator()
+    fun getIteratorFor(state: S): Iterator<Pair<Char, S>> =
+        transitionsFrom(state).toList().sortedBy { (char, _) -> char }.iterator()
 
     callstack.push(getIteratorFor(startState))
 

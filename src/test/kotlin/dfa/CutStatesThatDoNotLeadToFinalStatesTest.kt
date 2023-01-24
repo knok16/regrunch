@@ -30,7 +30,7 @@ class CutStatesThatDoNotLeadToFinalStatesTest {
             transition(c, final, 'c')
         }
 
-        assertEquals(4, dfa.transitions.size)
+        assertEquals(4, dfa.statesCount)
     }
 
     @Test
@@ -62,7 +62,7 @@ class CutStatesThatDoNotLeadToFinalStatesTest {
             transition(c, final, 'c')
         }
 
-        assertEquals(4, dfa.transitions.size)
+        assertEquals(4, dfa.statesCount)
     }
 
     @Test
@@ -93,6 +93,6 @@ class CutStatesThatDoNotLeadToFinalStatesTest {
             transition(final, a, 'c')
         }
 
-        assertEquals(1, dfa.transitions.size)
+        assertEquals(1, dfa.statesCount)
     }
 }
