@@ -43,6 +43,18 @@ object Fixtures {
         markAsFinal(even)
     }
 
+    val oddZeros = dfa {
+        val even = startState
+        val odd = newState()
+
+        transition(even, even, '1')
+        transition(even, odd, '0')
+        transition(odd, odd, '1')
+        transition(odd, even, '0')
+
+        markAsFinal(odd)
+    }
+
     fun divisibilityBy(n: Int): DFA<Char> = dfa {
         val remainders = Array(n) { if (it == 0) startState else newState() }
 
