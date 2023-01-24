@@ -1,5 +1,7 @@
 package dfa
 
+import State
+
 fun <A, S1, S2> intersection(dfa1: DFA<A, S1>, dfa2: DFA<A, S2>): DFA<A, State> {
     val builder = DFABuilder<A>()
 

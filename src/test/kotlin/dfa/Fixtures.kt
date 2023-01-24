@@ -1,5 +1,7 @@
 package dfa
 
+import State
+
 object Fixtures {
     val taylor = dfa {
         val s = startState

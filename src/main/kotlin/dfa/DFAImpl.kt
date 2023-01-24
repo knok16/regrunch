@@ -1,5 +1,7 @@
 package dfa
 
+import State
+
 class DFAImpl<A> internal constructor(
     override val startState: State,
     override val finalStates: Set<State>,
@@ -13,7 +15,8 @@ class DFAImpl<A> internal constructor(
         return state in finalStates
     }
 
-    override fun transitionsFrom(state: State): Map<A, State> = transitions[state]
+    override fun transitionsFrom(state: State): Map<A, State> =
+        transitions[state]
 
     override val statesCount: Int
         get() = transitions.size

@@ -1,5 +1,7 @@
 package dfa
 
+import State
+
 class DFABuilder<A> {
     private val transitions: MutableList<MutableMap<A, State>> = ArrayList()
     private val finalStates: MutableSet<State> = HashSet()
