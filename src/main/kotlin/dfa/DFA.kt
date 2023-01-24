@@ -1,9 +1,9 @@
 package dfa
 
-class DFA<A>(
-    private val startState: State,
-    private val finalStates: Set<State>,
-    private val transitions: List<Map<A, State>>
+class DFA<A> internal constructor(
+    val startState: State,
+    val finalStates: Set<State>,
+    val transitions: List<Map<A, State>>
 ) {
     fun accept(str: Sequence<A>): Boolean {
         var state = startState
