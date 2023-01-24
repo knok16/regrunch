@@ -3,7 +3,7 @@ package dfa
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
-class CutStatesThatDoNotLeadToFinalStatesKtTest {
+class CutStatesThatDoNotLeadToFinalStatesTest {
     @Test
     fun cutTentaclesThatDoNotLeadToFinalStates() {
         val dfa = dfa {

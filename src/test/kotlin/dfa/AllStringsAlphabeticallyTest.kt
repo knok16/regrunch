@@ -3,7 +3,7 @@ package dfa
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
-class AllStringsAlphabetically {
+class AllStringsAlphabeticallyTest {
     @Test
     fun allStringsAlphabetically1() {
         assertEquals(
