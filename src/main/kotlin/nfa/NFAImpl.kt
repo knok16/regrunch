@@ -8,9 +8,7 @@ class NFAImpl<A> internal constructor(
     private val transitions: List<Map<A, Set<State>>>
 ) : NFA<A, State> {
     override fun accept(str: Sequence<A>): Boolean =
-        (str.fold(setOf(startState)) { states, symbol ->
-            states.flatMap { transition(it, symbol) }.toSet()
-        } intersect finalStates).isNotEmpty()
+        (str.fold(setOf(startState), ::transition) intersect finalStates).isNotEmpty()
 
     override fun transitionsFrom(state: State): Set<A> =
         transitions[state].keys

@@ -9,6 +9,9 @@ interface NFA<A, S> {
     fun accept(str: Sequence<A>): Boolean
 }
 
+fun <A, S> NFA<A, S>.transition(states: Set<S>, symbol: A): Set<S> =
+    states.flatMap { transition(it, symbol) }.toSet()
+
 fun <A, S> NFA<A, S>.accept(str: List<A>): Boolean = accept(str.asSequence())
 
 fun <S> NFA<Char, S>.accept(str: String): Boolean = accept(str.asSequence())
