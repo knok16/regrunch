@@ -7,8 +7,10 @@ import dfa.Fixtures.no3Consecutive012
 import dfa.Fixtures.noConsecutiveOnes
 import dfa.Fixtures.taylor
 import dfa.Fixtures.wordEndsInIng
-import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class DFATest {
     @Test

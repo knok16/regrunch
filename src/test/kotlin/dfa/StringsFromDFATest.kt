@@ -7,7 +7,7 @@ import dfa.Fixtures.no3Consecutive012
 import dfa.Fixtures.noConsecutiveOnes
 import dfa.Fixtures.oddZeroes
 import dfa.Fixtures.taylor
-import org.junit.jupiter.api.Test
+import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class StringsFromDFATest {

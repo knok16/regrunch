@@ -2,7 +2,7 @@ package dfa
 
 import dfa.Fixtures.oddZeroes
 import dfa.Fixtures.taylor
-import org.junit.jupiter.api.Test
+import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class AllStringsAlphabeticallyTest {
