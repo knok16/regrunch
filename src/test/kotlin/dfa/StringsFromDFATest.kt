@@ -25,7 +25,6 @@ class StringsFromDFATest {
 
     @Test
     fun evenOnes() {
-        evenOnes.strings(5).forEach { println(""" "$it", """) }
         assertEquals(
             listOf(
                 "",
@@ -318,7 +317,6 @@ class StringsFromDFATest {
 
     @Test
     fun no3Consecutive0() {
-        no3Consecutive0.strings(5).forEach { println(""" "$it", """) }
         assertEquals(
             listOf(
                 "",
