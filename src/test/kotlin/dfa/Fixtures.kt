@@ -45,7 +45,7 @@ object Fixtures {
         markAsFinal(even)
     }
 
-    val oddZeros = dfa {
+    val oddZeroes = dfa {
         val even = startState
         val odd = newState()
 

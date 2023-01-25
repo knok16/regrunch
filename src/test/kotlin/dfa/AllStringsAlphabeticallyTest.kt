@@ -1,5 +1,7 @@
 package dfa
 
+import dfa.Fixtures.oddZeroes
+import dfa.Fixtures.taylor
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
@@ -19,7 +21,7 @@ class AllStringsAlphabeticallyTest {
                 "TAYLOR00@",
                 "TAYLOR00^"
             ),
-            Fixtures.taylor.allStringsAlphabetically().take(10).toList()
+            taylor.allStringsAlphabetically().take(10).toList()
         )
     }
 
@@ -38,7 +40,7 @@ class AllStringsAlphabeticallyTest {
                 "00000000000000000",
                 "0000000000000000000"
             ),
-            Fixtures.oddZeros.allStringsAlphabetically().take(10).toList()
+            oddZeroes.allStringsAlphabetically().take(10).toList()
         )
     }
 
