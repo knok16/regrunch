@@ -69,4 +69,137 @@ object Fixtures {
 
         markAsFinal(startState)
     }
+
+    val noConsecutiveOnes = dfa {
+        val hasNotEndedIn1 = startState
+        val hasEndedIn1 = newState()
+        val hadConsecutiveOnes = newState()
+
+        transition(hasNotEndedIn1, hasNotEndedIn1, '0')
+        transition(hasNotEndedIn1, hasEndedIn1, '1')
+
+        transition(hasEndedIn1, hasNotEndedIn1, '0')
+        transition(hasEndedIn1, hadConsecutiveOnes, '1')
+
+        transition(hadConsecutiveOnes, hadConsecutiveOnes, '0')
+        transition(hadConsecutiveOnes, hadConsecutiveOnes, '1')
+
+        markAsFinal(hasNotEndedIn1)
+        markAsFinal(hasEndedIn1)
+    }
+
+    val wordEndsInIng = dfa {
+        val wordSymbols = ('a'..'z') + ('A'..'Z') + '-'
+
+        val iSuffix = newState()
+        val inSuffix = newState()
+        val ingSuffix = newState()
+
+        transition(startState, iSuffix, 'i')
+        transition(startState, iSuffix, 'I')
+        wordSymbols.filter { it !in setOf('i', 'I') }.forEach {
+            transition(startState, startState, it)
+        }
+
+        transition(iSuffix, iSuffix, 'i')
+        transition(iSuffix, iSuffix, 'I')
+        transition(iSuffix, inSuffix, 'n')
+        transition(iSuffix, inSuffix, 'N')
+        wordSymbols.filter { it !in setOf('i', 'I', 'n', 'N') }.forEach {
+            transition(iSuffix, startState, it)
+        }
+
+        transition(inSuffix, iSuffix, 'i')
+        transition(inSuffix, iSuffix, 'I')
+        transition(inSuffix, ingSuffix, 'g')
+        transition(inSuffix, ingSuffix, 'G')
+        wordSymbols.filter { it !in setOf('i', 'I', 'g', 'G') }.forEach {
+            transition(inSuffix, startState, it)
+        }
+
+        transition(ingSuffix, iSuffix, 'i')
+        transition(ingSuffix, iSuffix, 'I')
+        wordSymbols.filter { it !in setOf('i', 'I') }.forEach {
+            transition(ingSuffix, startState, it)
+        }
+
+        markAsFinal(ingSuffix)
+    }
+
+    val no3Consecutive0 = dfa {
+        val endsIn0Zeroes = startState
+        val endsIn1Zero = newState()
+        val endsIn2Zeroes = newState()
+        val had3ConsecutiveZeroes = newState()
+
+        transition(endsIn0Zeroes, endsIn1Zero, '0')
+        transition(endsIn0Zeroes, endsIn0Zeroes, '1')
+        transition(endsIn0Zeroes, endsIn0Zeroes, '2')
+
+        transition(endsIn1Zero, endsIn2Zeroes, '0')
+        transition(endsIn1Zero, endsIn0Zeroes, '1')
+        transition(endsIn1Zero, endsIn0Zeroes, '2')
+
+        transition(endsIn2Zeroes, had3ConsecutiveZeroes, '0')
+        transition(endsIn2Zeroes, endsIn0Zeroes, '1')
+        transition(endsIn2Zeroes, endsIn0Zeroes, '2')
+
+        transition(had3ConsecutiveZeroes, had3ConsecutiveZeroes, '0')
+        transition(had3ConsecutiveZeroes, had3ConsecutiveZeroes, '1')
+        transition(had3ConsecutiveZeroes, had3ConsecutiveZeroes, '2')
+
+        markAsFinal(endsIn0Zeroes)
+        markAsFinal(endsIn1Zero)
+        markAsFinal(endsIn2Zeroes)
+    }
+
+    val no3Consecutive012 = dfa {
+        val a = newState()
+        val b = newState()
+        val c = newState()
+        val d = newState()
+        val e = newState()
+        val f = newState()
+        val dead = newState()
+
+        transition(startState, a, '0')
+        transition(startState, b, '1')
+        transition(startState, c, '2')
+
+        transition(a, d, '0')
+        transition(a, b, '1')
+        transition(a, c, '2')
+
+        transition(b, a, '0')
+        transition(b, e, '1')
+        transition(b, c, '2')
+
+        transition(c, a, '0')
+        transition(c, b, '1')
+        transition(c, f, '2')
+
+        transition(d, dead, '0')
+        transition(d, b, '1')
+        transition(d, c, '2')
+
+        transition(e, a, '0')
+        transition(e, dead, '1')
+        transition(e, c, '2')
+
+        transition(f, a, '0')
+        transition(f, b, '1')
+        transition(f, dead, '2')
+
+        transition(dead, dead, '0')
+        transition(dead, dead, '1')
+        transition(dead, dead, '2')
+
+        markAsFinal(startState)
+        markAsFinal(a)
+        markAsFinal(b)
+        markAsFinal(c)
+        markAsFinal(d)
+        markAsFinal(e)
+        markAsFinal(f)
+    }
 }
