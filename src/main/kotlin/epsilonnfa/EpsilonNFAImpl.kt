@@ -9,7 +9,7 @@ class EpsilonNFAImpl<A> internal constructor(
     private val epsilonTransitions: List<Set<State>>
 ) : EpsilonNFA<A, State> {
     override fun accept(str: Sequence<A>): Boolean =
-        (str.fold(setOf(startState)) { states, symbol ->
+        (str.fold(closure(startState)) { states, symbol ->
             transition(states, symbol).flatMap { closure(it) }.toSet()
         } intersect finalStates).isNotEmpty()
 
