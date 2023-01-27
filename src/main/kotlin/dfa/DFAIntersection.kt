@@ -3,7 +3,8 @@ package dfa
 import State
 
 fun <A, S1, S2> intersection(dfa1: DFA<A, S1>, dfa2: DFA<A, S2>): DFA<A, State> {
-    val builder = DFABuilder<A>()
+    if (dfa1.alphabet != dfa2.alphabet) throw IllegalArgumentException("DFAs have different alphabets")
+    val builder = DFABuilder<A>(dfa1.alphabet)
 
     val correspondence = HashMap<Pair<S1, S2>, State>()
     correspondence[dfa1.startState to dfa2.startState] = builder.startState

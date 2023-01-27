@@ -3,6 +3,8 @@ package nfa
 import State
 
 class NFAImpl<A> internal constructor(
+    override val alphabet: Set<A>,
+    override val states: Set<State>,
     override val startState: State,
     override val finalStates: Set<State>,
     private val transitions: List<Map<A, Set<State>>>

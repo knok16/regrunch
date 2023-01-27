@@ -3,7 +3,7 @@ package dfa
 import State
 
 object Fixtures {
-    val taylor = dfa {
+    val taylor = dfa((0x20.toChar()..0x127.toChar()).toSet()) {
         val s = startState
         val states = IntArray(9) { newState() }
 
@@ -33,7 +33,7 @@ object Fixtures {
         markAsFinal(states.last())
     }
 
-    val evenOnes = dfa {
+    val evenOnes = dfa(setOf('0', '1')) {
         val even = startState
         val odd = newState()
 
@@ -45,7 +45,7 @@ object Fixtures {
         markAsFinal(even)
     }
 
-    val oddZeroes = dfa {
+    val oddZeroes = dfa(setOf('0', '1')) {
         val even = startState
         val odd = newState()
 
@@ -57,7 +57,7 @@ object Fixtures {
         markAsFinal(odd)
     }
 
-    fun divisibilityBy(n: Int): DFA<Char, State> = dfa {
+    fun divisibilityBy(n: Int): DFA<Char, State> = dfa(('0'..'9').toSet()) {
         val remainders = Array(n) { if (it == 0) startState else newState() }
 
         for (remainder in 0 until n) {
@@ -70,7 +70,7 @@ object Fixtures {
         markAsFinal(startState)
     }
 
-    val noConsecutiveOnes = dfa {
+    val noConsecutiveOnes = dfa(setOf('0', '1')) {
         val hasNotEndedIn1 = startState
         val hasEndedIn1 = newState()
         val hadConsecutiveOnes = newState()
@@ -88,7 +88,7 @@ object Fixtures {
         markAsFinal(hasEndedIn1)
     }
 
-    val wordEndsInIng = dfa {
+    val wordEndsInIng = dfa((0x20.toChar()..0x127.toChar()).toSet()) {
         val wordSymbols = ('a'..'z') + ('A'..'Z') + '-'
 
         val iSuffix = newState()
@@ -126,7 +126,7 @@ object Fixtures {
         markAsFinal(ingSuffix)
     }
 
-    val no3Consecutive0 = dfa {
+    val no3Consecutive0 = dfa(setOf('0', '1', '2')) {
         val endsIn0Zeroes = startState
         val endsIn1Zero = newState()
         val endsIn2Zeroes = newState()
@@ -153,7 +153,7 @@ object Fixtures {
         markAsFinal(endsIn2Zeroes)
     }
 
-    val no3Consecutive012 = dfa {
+    val no3Consecutive012 = dfa(setOf('0', '1', '2')) {
         val a = newState()
         val b = newState()
         val c = newState()

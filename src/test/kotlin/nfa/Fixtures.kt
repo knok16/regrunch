@@ -1,7 +1,7 @@
 package nfa
 
 object Fixtures {
-    val simpleChessBoard = nfa {
+    val simpleChessBoard = nfa(setOf('r', 'b')) {
         val r1c1 = startState
         val r1c2 = newState()
         val r1c3 = newState()

@@ -6,7 +6,7 @@ import kotlin.test.assertEquals
 class CutStatesThatDoNotLeadToFinalStatesTest {
     @Test
     fun cutTentaclesThatDoNotLeadToFinalStates() {
-        val dfa = dfa {
+        val dfa = dfa(setOf('a', 'b', 'c')) {
             val a = startState
             val b = newState()
             val c = newState()
@@ -30,12 +30,12 @@ class CutStatesThatDoNotLeadToFinalStatesTest {
             transition(c, final, 'c')
         }
 
-        assertEquals(4, dfa.statesCount)
+        assertEquals(4, dfa.states.size)
     }
 
     @Test
     fun cutBlossomsThatDoNotLeadToFinalStates() {
-        val dfa = dfa {
+        val dfa = dfa(setOf('a', 'b', 'c')) {
             val a = startState
             val b = newState()
             val c = newState()
@@ -62,12 +62,12 @@ class CutStatesThatDoNotLeadToFinalStatesTest {
             transition(c, final, 'c')
         }
 
-        assertEquals(4, dfa.statesCount)
+        assertEquals(4, dfa.states.size)
     }
 
     @Test
     fun finalStateIsNotReachableFromStart() {
-        val dfa = dfa {
+        val dfa = dfa(setOf('a', 'b', 'c')) {
             val a = startState
             val b = newState()
             val c = newState()
@@ -93,6 +93,6 @@ class CutStatesThatDoNotLeadToFinalStatesTest {
             transition(final, a, 'c')
         }
 
-        assertEquals(1, dfa.statesCount)
+        assertEquals(1, dfa.states.size)
     }
 }

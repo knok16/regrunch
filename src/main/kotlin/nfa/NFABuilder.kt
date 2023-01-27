@@ -2,7 +2,9 @@ package nfa
 
 import State
 
-class NFABuilder<A> {
+class NFABuilder<A>(
+    private val alphabet: Set<A>
+) {
     private val transitions: MutableList<MutableMap<A, Set<State>>> = ArrayList()
     private val finalStates: MutableSet<State> = HashSet()
     val startState = newState()
@@ -23,11 +25,13 @@ class NFABuilder<A> {
     }
 
     fun build(): NFA<A, State> = NFAImpl(
+        alphabet = alphabet,
+        states = (0 until transitions.size).toSet(),
         startState = 0,
         finalStates = finalStates.toSet(),
         transitions = transitions
     )
 }
 
-fun <A> nfa(buildFunction: NFABuilder<A>.() -> Unit): NFA<A, State> =
-    NFABuilder<A>().also { it.buildFunction() }.build()
+fun <A> nfa(alphabet: Set<A>, buildFunction: NFABuilder<A>.() -> Unit): NFA<A, State> =
+    NFABuilder(alphabet).also { it.buildFunction() }.build()

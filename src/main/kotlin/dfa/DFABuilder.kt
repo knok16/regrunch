@@ -2,7 +2,9 @@ package dfa
 
 import State
 
-class DFABuilder<A> {
+class DFABuilder<A>(
+    private val alphabet: Set<A>
+) {
     private val transitions: MutableList<MutableMap<A, State>> = ArrayList()
     private val finalStates: MutableSet<State> = HashSet()
     val startState = newState()
@@ -24,6 +26,8 @@ class DFABuilder<A> {
 
     fun build(): DFA<A, State> = cutStatesThatDoNotLeadToFinalStates(
         DFAImpl(
+            alphabet = alphabet,
+            states = (0 until transitions.size).toSet(),
             startState = 0,
             finalStates = finalStates.toSet(),
             transitions = transitions
@@ -31,13 +35,13 @@ class DFABuilder<A> {
     )
 }
 
-fun <A> dfa(buildFunction: DFABuilder<A>.() -> Unit): DFA<A, State> =
-    DFABuilder<A>().also { it.buildFunction() }.build()
+fun <A> dfa(alphabet: Set<A>, buildFunction: DFABuilder<A>.() -> Unit): DFA<A, State> =
+    DFABuilder<A>(alphabet).also { it.buildFunction() }.build()
 
 // Cut states that do not lead to final state
 private fun <A> cutStatesThatDoNotLeadToFinalStates(dfa: DFA<A, State>): DFA<A, State> {
-    val reverseEdges = Array(dfa.statesCount) { HashSet<State>() }
-    (0 until dfa.statesCount).forEach { state ->
+    val reverseEdges = Array(dfa.states.size) { HashSet<State>() }
+    (0 until dfa.states.size).forEach { state ->
         dfa.transitionsFrom(state).forEach { (_, to) ->
             reverseEdges[to].add(state)
         }
@@ -55,8 +59,8 @@ private fun <A> cutStatesThatDoNotLeadToFinalStates(dfa: DFA<A, State>): DFA<A, 
     dfa.finalStates.forEach(::dfs)
 
     return when {
-        dfa.startState !in visited -> emptyDFA()
-        visited.size == dfa.statesCount -> dfa
+        dfa.startState !in visited -> emptyDFA(dfa.alphabet)
+        visited.size == dfa.states.size -> dfa
         else -> {
             val renumbering = visited
                 .sorted()
@@ -64,9 +68,11 @@ private fun <A> cutStatesThatDoNotLeadToFinalStates(dfa: DFA<A, State>): DFA<A, 
                 .associate { it.value to it.index }
 
             DFAImpl(
+                dfa.alphabet,
+                (0 until visited.size).toSet(),
                 0,
                 dfa.finalStates.map(renumbering::getValue).toSet(),
-                (0 until dfa.statesCount)
+                (0 until dfa.states.size)
                     .filter { it in visited }
                     .map { state ->
                         dfa.transitionsFrom(state)

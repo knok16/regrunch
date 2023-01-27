@@ -48,7 +48,7 @@ class AllStringsAlphabeticallyTest {
     fun dfaHasCycleInItsDefinitionThatDoNotLeadToFinalState() {
         assertEquals(
             listOf("b"),
-            dfa {
+            dfa(setOf('a', 'b')) {
                 val a = startState
                 val b = newState()
                 val c = newState()
@@ -71,7 +71,7 @@ class AllStringsAlphabeticallyTest {
     fun allStringsOfEmptyDFA() {
         assertEquals(
             emptyList(),
-            emptyDFA<Char>().allStringsAlphabetically().toList()
+            emptyDFA(setOf('a', 'b')).allStringsAlphabetically().toList()
         )
     }
 }

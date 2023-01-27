@@ -5,7 +5,7 @@ import nfa.NFA
 import nfa.NFABuilder
 
 fun <A> convertToNFA(nfa: EpsilonNFA<A, State>): NFA<A, State> {
-    val builder = NFABuilder<A>()
+    val builder = NFABuilder(nfa.alphabet)
 
     val n = nfa.states.size
     for (i in 1 until n) builder.newState()

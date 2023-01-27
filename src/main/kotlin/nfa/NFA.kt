@@ -1,6 +1,8 @@
 package nfa
 
 interface NFA<A, S> {
+    val alphabet: Set<A>
+    val states: Set<S>
     val startState: S
     val finalStates: Set<S>
     val statesCount: Int

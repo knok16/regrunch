@@ -5,7 +5,7 @@ import dfa.DFA
 import dfa.DFABuilder
 
 fun <A, S> convertToDFA(nfa: NFA<A, S>): DFA<A, State> {
-    val builder = DFABuilder<A>()
+    val builder = DFABuilder(nfa.alphabet)
 
     val correspondence = HashMap<Set<S>, State>()
     correspondence[setOf(nfa.startState)] = builder.startState

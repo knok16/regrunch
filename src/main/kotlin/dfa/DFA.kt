@@ -1,9 +1,10 @@
 package dfa
 
 interface DFA<A, S> {
+    val alphabet: Set<A>
+    val states: Set<S>
     val startState: S
     val finalStates: Set<S>
-    val statesCount: Int
     fun accept(str: Sequence<A>): Boolean
     fun transitionsFrom(state: S): Map<A, S>
 }

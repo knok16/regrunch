@@ -1,5 +1,7 @@
 package dfa
 
+import dfa.Fixtures.evenOnes
+import dfa.Fixtures.taylor
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -18,7 +20,7 @@ class DFAIntersectionTest {
 
     @Test
     fun intersection2() {
-        val dfa1 = dfa {
+        val dfa1 = dfa(setOf('a', 'b', 'c')) {
             val a = startState
             val b = newState()
             val c = newState()
@@ -30,7 +32,7 @@ class DFAIntersectionTest {
             markAsFinal(b)
             markAsFinal(c)
         }
-        val dfa2 = dfa {
+        val dfa2 = dfa(setOf('a', 'b', 'c')) {
             val a = startState
             val b = newState()
             val c = newState()
@@ -53,12 +55,12 @@ class DFAIntersectionTest {
     fun intersectionWithEmpty() {
         assertEquals(
             emptyList(),
-            (Fixtures.taylor intersect emptyDFA()).allStringsAlphabetically().toList()
+            (taylor intersect emptyDFA(taylor.alphabet)).allStringsAlphabetically().toList()
         )
 
         assertEquals(
             emptyList(),
-            (emptyDFA<Char>() intersect Fixtures.evenOnes).allStringsAlphabetically().toList()
+            (emptyDFA(evenOnes.alphabet) intersect evenOnes).allStringsAlphabetically().toList()
         )
     }
 }
