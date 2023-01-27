@@ -2,7 +2,9 @@ package epsilonnfa
 
 import State
 
-class EpsilonNFABuilder<A> {
+class EpsilonNFABuilder<A>(
+    private val alphabet: Set<A>
+) {
     private val transitions: MutableList<MutableMap<A, Set<State>>> = ArrayList()
     private val epsilonTransitions: MutableList<MutableSet<State>> = ArrayList()
     private val finalStates: MutableSet<State> = HashSet()
@@ -30,6 +32,8 @@ class EpsilonNFABuilder<A> {
     }
 
     fun build(): EpsilonNFA<A, State> = EpsilonNFAImpl(
+        alphabet = alphabet,
+        states = (0 until transitions.size).toSet(),
         startState = 0,
         finalStates = finalStates.toSet(),
         transitions = transitions,
@@ -37,5 +41,5 @@ class EpsilonNFABuilder<A> {
     )
 }
 
-fun <A> epsilonNFA(buildFunction: EpsilonNFABuilder<A>.() -> Unit): EpsilonNFA<A, State> =
-    EpsilonNFABuilder<A>().also { it.buildFunction() }.build()
+fun <A> epsilonNFA(alphabet: Set<A>, buildFunction: EpsilonNFABuilder<A>.() -> Unit): EpsilonNFA<A, State> =
+    EpsilonNFABuilder(alphabet).also { it.buildFunction() }.build()

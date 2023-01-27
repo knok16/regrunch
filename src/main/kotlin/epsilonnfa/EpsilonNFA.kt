@@ -1,10 +1,10 @@
 package epsilonnfa
 
 interface EpsilonNFA<A, S> {
+    val alphabet: Set<A>
+    val states: Set<S>
     val startState: S
     val finalStates: Set<S>
-    val statesCount: Int
-    fun transitionsFrom(state: S): Set<A>
     fun transition(state: S, symbol: A): Set<S>
     fun epsilonTransitions(state: S): Set<S>
     fun accept(str: Sequence<A>): Boolean

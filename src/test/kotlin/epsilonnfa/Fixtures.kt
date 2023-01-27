@@ -1,7 +1,7 @@
 package epsilonnfa
 
 object Fixtures {
-    val example1 = epsilonNFA {
+    val example1 = epsilonNFA(setOf('0', '1')) {
         val a = startState
         val b = newState()
         val c = newState()
@@ -27,7 +27,7 @@ object Fixtures {
     }
 
     // (ab)*∪(aba)*
-    val example2 = epsilonNFA {
+    val example2 = epsilonNFA(setOf('a', 'b')) {
         val q1 = newState()
         val q2 = newState()
         val q3 = newState()

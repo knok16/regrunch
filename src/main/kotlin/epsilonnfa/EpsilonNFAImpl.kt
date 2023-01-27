@@ -3,6 +3,8 @@ package epsilonnfa
 import State
 
 class EpsilonNFAImpl<A> internal constructor(
+    override val alphabet: Set<A>,
+    override val states: Set<State>,
     override val startState: State,
     override val finalStates: Set<State>,
     private val transitions: List<Map<A, Set<State>>>,
@@ -12,12 +14,6 @@ class EpsilonNFAImpl<A> internal constructor(
         (str.fold(closure(startState)) { states, symbol ->
             transition(states, symbol).flatMap { closure(it) }.toSet()
         } intersect finalStates).isNotEmpty()
-
-    override fun transitionsFrom(state: State): Set<A> =
-        transitions[state].keys
-
-    override val statesCount: Int
-        get() = transitions.size
 
     override fun epsilonTransitions(state: State): Set<State> =
         epsilonTransitions[state]
