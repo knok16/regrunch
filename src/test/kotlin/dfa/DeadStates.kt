@@ -3,9 +3,9 @@ package dfa
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class CutStatesThatDoNotLeadToFinalStatesTest {
+class DeadStates {
     @Test
-    fun cutTentaclesThatDoNotLeadToFinalStates() {
+    fun tentacles() {
         val dfa = dfa(setOf('a', 'b', 'c')) {
             val a = startState
             val b = newState()
@@ -30,11 +30,11 @@ class CutStatesThatDoNotLeadToFinalStatesTest {
             transition(c, final, 'c')
         }
 
-        assertEquals(4, dfa.states.size)
+        assertEquals(setOf(3, 4, 5, 7), dfa.deadStates())
     }
 
     @Test
-    fun cutBlossomsThatDoNotLeadToFinalStates() {
+    fun blossoms() {
         val dfa = dfa(setOf('a', 'b', 'c')) {
             val a = startState
             val b = newState()
@@ -62,7 +62,7 @@ class CutStatesThatDoNotLeadToFinalStatesTest {
             transition(c, final, 'c')
         }
 
-        assertEquals(4, dfa.states.size)
+        assertEquals(setOf(3, 4, 5, 6, 8), dfa.deadStates())
     }
 
     @Test
@@ -93,6 +93,6 @@ class CutStatesThatDoNotLeadToFinalStatesTest {
             transition(final, a, 'c')
         }
 
-        assertEquals(1, dfa.states.size)
+        assertEquals(setOf(0, 1, 2, 8), dfa.deadStates())
     }
 }

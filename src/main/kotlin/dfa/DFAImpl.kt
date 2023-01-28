@@ -9,14 +9,7 @@ class DFAImpl<A> internal constructor(
     override val finalStates: Set<State>,
     private val transitions: List<Map<A, State>>
 ) : DFA<A, State> {
-    override fun accept(str: Sequence<A>): Boolean {
-        var state = startState
-        for (c in str) {
-            state = transitions[state][c] ?: return false
-        }
-        return state in finalStates
-    }
-
-    override fun transitionsFrom(state: State): Map<A, State> =
-        transitions[state]
+    override fun transition(state: State, symbol: A): State =
+        transitions[state][symbol]
+            ?: throw IllegalArgumentException("There is no transition from state $state on symbol '$symbol'")
 }

@@ -6,10 +6,14 @@ fun <S> DFA<Char, S>.allStringsAlphabetically(): Sequence<String> = sequence {
     val callstack = Stack<Iterator<Pair<Char, S>>>()
 
     val prefix = CharArray(100)
+    val deadStates = deadStates()
+    val alphabetSorted = alphabet.sorted()
 
-    // TODO optimize to sort once and lazily
     fun getIteratorFor(state: S): Iterator<Pair<Char, S>> =
-        transitionsFrom(state).toList().sortedBy { (char, _) -> char }.iterator()
+        alphabetSorted
+            .map { symbol -> symbol to transition(state, symbol) }
+            .filter { (_, nextState) -> nextState !in deadStates }
+            .iterator()
 
     callstack.push(getIteratorFor(startState))
 

@@ -4,20 +4,16 @@ import State
 
 fun <A, S1, S2> intersection(dfa1: DFA<A, S1>, dfa2: DFA<A, S2>): DFA<A, State> {
     if (dfa1.alphabet != dfa2.alphabet) throw IllegalArgumentException("DFAs have different alphabets")
-    val builder = DFABuilder<A>(dfa1.alphabet)
+    val alphabet = dfa1.alphabet
+    val builder = DFABuilder(alphabet)
 
     val correspondence = HashMap<Pair<S1, S2>, State>()
     correspondence[dfa1.startState to dfa2.startState] = builder.startState
 
     fun dfs(state1: S1, state2: S2, state: State) {
-        val t1 = dfa1.transitionsFrom(state1)
-        val t2 = dfa2.transitionsFrom(state2)
-
-        val commonSymbols = t1.keys intersect t2.keys
-
-        for (symbol in commonSymbols) {
-            val to1 = t1.getValue(symbol)
-            val to2 = t2.getValue(symbol)
+        for (symbol in alphabet) {
+            val to1 = dfa1.transition(state1, symbol)
+            val to2 = dfa2.transition(state2, symbol)
 
             val key = to1 to to2
             val to = if (key in correspondence) {

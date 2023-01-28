@@ -5,5 +5,5 @@ fun <A> emptyDFA(alphabet: Set<A>) = DFAImpl(
     states = setOf(0),
     startState = 0,
     finalStates = emptySet(),
-    transitions = listOf(emptyMap())
+    transitions = listOf(alphabet.associateWith { 0 })
 )
