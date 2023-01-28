@@ -1,9 +1,11 @@
 package dfa
 
+private val SINGLE_STATE = 0
+
 fun <A> emptyDFA(alphabet: Set<A>) = DFAImpl(
     alphabet = alphabet,
-    states = setOf(0),
-    startState = 0,
+    states = setOf(SINGLE_STATE),
+    startState = SINGLE_STATE,
     finalStates = emptySet(),
-    transitions = listOf(alphabet.associateWith { 0 })
+    transitions = listOf(alphabet.associateWith { SINGLE_STATE })
 )
