@@ -74,4 +74,12 @@ class AllStringsAlphabeticallyTest {
             emptyDFA(setOf('a', 'b')).allStringsAlphabetically().toList()
         )
     }
+
+    @Test
+    fun longStrings() {
+        assertEquals(
+            "0".repeat(2001),
+            oddZeroes.allStringsAlphabetically().drop(1000).first()
+        )
+    }
 }
