@@ -202,4 +202,81 @@ object Fixtures {
         markAsFinal(e)
         markAsFinal(f)
     }
+
+    val deadTentacle = dfa(setOf('a', 'b', 'c')) {
+        val a = startState
+        val b = newState()
+        val c = newState()
+
+        transition(a, b, 'a')
+        transition(b, c, 'a')
+        transition(c, a, 'a')
+
+        // Dead states, connected sequentially and reachable from start state
+        val d = newState()
+        val e = newState()
+        val f = newState()
+
+        transition(b, d, 'b')
+        transition(d, e, 'b')
+        transition(e, f, 'b')
+
+        val final = newState()
+        markAsFinal(final)
+
+        transition(c, final, 'c')
+    }
+
+    val deadBlossom = dfa(setOf('a', 'b', 'c')) {
+        val a = startState
+        val b = newState()
+        val c = newState()
+
+        transition(a, b, 'a')
+        transition(b, c, 'a')
+        transition(c, a, 'a')
+
+        // Dead states, connected as triangle and reachable from start state
+        val d = newState()
+        val e = newState()
+        val f = newState()
+        val g = newState()
+
+        transition(b, d, 'b')
+        transition(d, e, 'b')
+        transition(e, f, 'b')
+        transition(f, g, 'b')
+        transition(g, e, 'b')
+
+        val final = newState()
+        markAsFinal(final)
+
+        transition(c, final, 'c')
+    }
+
+    val finalStateIsNotReachableFromStart = dfa(setOf('a', 'b', 'c')) {
+        val a = startState
+        val b = newState()
+        val c = newState()
+
+        transition(a, b, 'a')
+        transition(b, c, 'a')
+        transition(c, a, 'a')
+
+        val d = newState()
+        val e = newState()
+        val f = newState()
+        val g = newState()
+
+        transition(d, e, 'b')
+        transition(e, f, 'b')
+        transition(f, g, 'b')
+        transition(g, e, 'b')
+
+        val final = newState()
+        markAsFinal(final)
+
+        transition(e, final, 'c')
+        transition(final, a, 'c')
+    }
 }
