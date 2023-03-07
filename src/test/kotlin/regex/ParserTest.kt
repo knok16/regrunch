@@ -2,6 +2,7 @@ package regex
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 private fun symbol(vararg symbols: Char) = Symbol(symbols.toSet())
 private fun union(vararg parts: RegexPart) = Union(parts.toSet())
@@ -57,6 +58,26 @@ class ParserTest {
     }
 
     @Test
+    fun nothingToEscape() {
+        assertFailsWith<ParseException>("No character to escape") {
+            parse("""abc\""")
+        }.let {
+            assertEquals(3, it.fromIndex)
+            assertEquals(3, it.toIndex)
+        }
+    }
+
+    @Test
+    fun unexpectedEscapedCharacter() {
+        assertFailsWith<ParseException>("Unexpected escaped character '0'") {
+            parse("""abc\0def""")
+        }.let {
+            assertEquals(4, it.fromIndex)
+            assertEquals(4, it.toIndex)
+        }
+    }
+
+    @Test
     fun simpleConcatenation() {
         assertEquals(concatenation(symbol('a'), symbol('b')), parse("""ab"""))
     }
@@ -67,8 +88,56 @@ class ParserTest {
     }
 
     @Test
+    fun unionNoLeftOperand() {
+        assertFailsWith<ParseException>("No left operand") {
+            parse("""|b""")
+        }.let {
+            assertEquals(0, it.fromIndex)
+            assertEquals(0, it.toIndex)
+        }
+        assertFailsWith<ParseException>("No left operand") {
+            parse("""ab(|c)""")
+        }.let {
+            assertEquals(3, it.fromIndex)
+            assertEquals(3, it.toIndex)
+        }
+    }
+
+    @Test
+    fun unionNoRightOperand() {
+        assertFailsWith<ParseException>("No right operand") {
+            parse("""b|""")
+        }.let {
+            assertEquals(1, it.fromIndex)
+            assertEquals(1, it.toIndex)
+        }
+        assertFailsWith<ParseException>("No right operand") {
+            parse("""(a|)bc""")
+        }.let {
+            assertEquals(2, it.fromIndex)
+            assertEquals(2, it.toIndex)
+        }
+    }
+
+    @Test
     fun simpleKleeneStar() {
         assertEquals(Repeat(symbol('a'), 0, null), parse("""a*"""))
+    }
+
+    @Test
+    fun kleeneStarNoOperand() {
+        assertFailsWith<ParseException>("No operand") {
+            parse("""*b""")
+        }.let {
+            assertEquals(0, it.fromIndex)
+            assertEquals(0, it.toIndex)
+        }
+        assertFailsWith<ParseException>("No operand") {
+            parse("""ab(*c)""")
+        }.let {
+            assertEquals(3, it.fromIndex)
+            assertEquals(3, it.toIndex)
+        }
     }
 
     @Test
@@ -77,8 +146,40 @@ class ParserTest {
     }
 
     @Test
+    fun plusOperatorNoOperand() {
+        assertFailsWith<ParseException>("No operand") {
+            parse("""+b""")
+        }.let {
+            assertEquals(0, it.fromIndex)
+            assertEquals(0, it.toIndex)
+        }
+        assertFailsWith<ParseException>("No operand") {
+            parse("""ab(+c)""")
+        }.let {
+            assertEquals(3, it.fromIndex)
+            assertEquals(3, it.toIndex)
+        }
+    }
+
+    @Test
     fun simpleQuestionMarkOperator() {
         assertEquals(Repeat(symbol('a'), 0, 1), parse("""a?"""))
+    }
+
+    @Test
+    fun questionMarkOperatorNoOperand() {
+        assertFailsWith<ParseException>("No operand") {
+            parse("""?b""")
+        }.let {
+            assertEquals(0, it.fromIndex)
+            assertEquals(0, it.toIndex)
+        }
+        assertFailsWith<ParseException>("No operand") {
+            parse("""ab(?c)""")
+        }.let {
+            assertEquals(3, it.fromIndex)
+            assertEquals(3, it.toIndex)
+        }
     }
 
     @Test
@@ -97,6 +198,52 @@ class ParserTest {
         assertEquals(Repeat(symbol('a'), 0, null), parse("""a{0,}"""))
         assertEquals(Repeat(symbol('a'), 1, null), parse("""a{1,}"""))
         assertEquals(Repeat(symbol('a'), 2, null), parse("""a{2,}"""))
+    }
+
+    @Test
+    fun repeatOperatorNoClosingCurlyBracket() {
+        assertFailsWith<ParseException>("Unbalanced curly bracket") {
+            parse("""abc{1,2""")
+        }.let {
+            assertEquals(3, it.fromIndex)
+            assertEquals(3, it.toIndex)
+        }
+    }
+
+    @Test
+    fun repeatOperatorTooManyIntegers() {
+        assertFailsWith<ParseException>("Unexpected number of parts in repeat operator") {
+            parse("""abc{1,22,3}""")
+        }.let {
+            assertEquals(3, it.fromIndex)
+            assertEquals(10, it.toIndex)
+        }
+    }
+
+    @Test
+    fun repeatOperatorNotAnInteger() {
+        assertFailsWith<ParseException>("Not an integer parameter of repeat operator") {
+            parse("""abc{1,abc}""")
+        }.let {
+            assertEquals(6, it.fromIndex)
+            assertEquals(8, it.toIndex)
+        }
+    }
+
+    @Test
+    fun repeatOperatorNoOperand() {
+        assertFailsWith<ParseException>("No operand") {
+            parse("""{2}b""")
+        }.let {
+            assertEquals(0, it.fromIndex)
+            assertEquals(2, it.toIndex)
+        }
+        assertFailsWith<ParseException>("No operand") {
+            parse("""ab({3,7}c)""")
+        }.let {
+            assertEquals(3, it.fromIndex)
+            assertEquals(7, it.toIndex)
+        }
     }
 
     @Test
@@ -151,6 +298,26 @@ class ParserTest {
             concatenation(symbol('a'), union(symbol('b'), symbol('c')), union(symbol('d'), symbol('e'))),
             parse("a((b|c)(d|e))")
         )
+    }
+
+    @Test
+    fun unbalancedLeftBracket() {
+        assertFailsWith<ParseException>("Unbalanced left bracket") {
+            parse("""ab(cd(e|f)g""")
+        }.let {
+            assertEquals(2, it.fromIndex)
+            assertEquals(2, it.toIndex)
+        }
+    }
+
+    @Test
+    fun unbalancedRightBracket() {
+        assertFailsWith<ParseException>("Unbalanced right bracket") {
+            parse("""ab(c|d)e)f)g""")
+        }.let {
+            assertEquals(8, it.fromIndex)
+            assertEquals(8, it.toIndex)
+        }
     }
 
     @Test

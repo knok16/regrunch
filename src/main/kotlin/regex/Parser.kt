@@ -2,15 +2,21 @@ package regex
 
 import java.util.*
 
+class ParseException constructor(message: String, val fromIndex: Int, val toIndex: Int) : Exception(message) {
+    constructor(message: String, at: Int) : this(message, at, at)
+}
+
 internal class Reader(private val str: String) {
     private var i = 0
     fun next(): Char? = if (i < str.length) str[i++] else null
+    fun cursor(): Int = i
+    fun prevCursor(): Int = i - 1 // TODO ?
 }
 
-internal fun parseEscapedCharacter(reader: Reader, alphabet: Set<Char>): Symbol {
-    val char = reader.next()
-    return when (char) {
-        null -> TODO()
+internal fun parseEscapedCharacter(reader: Reader, alphabet: Set<Char>): SymbolToken {
+    val cursor = reader.cursor()
+    val symbol = when (val char = reader.next()) {
+        null -> throw ParseException("No character to escape", reader.prevCursor())
         'd' -> Symbol(alphabet.filter { it.isDigit() }.toSet())
         'D' -> Symbol(alphabet.filterNot { it.isDigit() }.toSet())
         's' -> Symbol(alphabet.filter { it.isWhitespace() }.toSet())
@@ -21,37 +27,40 @@ internal fun parseEscapedCharacter(reader: Reader, alphabet: Set<Char>): Symbol 
         'r' -> Symbol(setOf('\r'))
         'n' -> Symbol(setOf('\n'))
         '\\', '.', '|', '(', ')', '[', '{', '*', '+', '?' -> Symbol(setOf(char))
-        else -> throw IllegalArgumentException("Unexpected escaped character '$char' at ") // TODO
+        else -> throw ParseException("Unexpected escaped character '$char'", reader.prevCursor())
     }
+    return SymbolToken(symbol, cursor, cursor)
 }
 
-internal fun parseSetNotation(reader: Reader, alphabet: Set<Char>): Symbol = TODO()
+internal fun parseSetNotation(reader: Reader, alphabet: Set<Char>): SymbolToken = TODO()
 
 // TODO rework!
 internal fun parseRepeatNotation(reader: Reader): RepeatOperator {
+    val initialCursor = reader.prevCursor()
     val s = StringBuilder()
     while (true) {
-        val token = reader.next() ?: throw IllegalArgumentException("Unbalanced curly bracket at ${TODO()}")
+        val token = reader.next() ?: throw ParseException("Unbalanced curly bracket", initialCursor)
         if (token == '}') break else s.append(token)
     }
     val ints = s.toString().split(',').map { it.trim() }.map { it.takeIf { it.isNotBlank() } }
         .map { it?.toInt() } // TODO add error handling
+    val endingCursor = reader.prevCursor()
     return when (ints.size) {
-        0 -> RepeatOperator(0, null) // TODO is it legal?
-        1 -> RepeatOperator(ints[0] ?: 0, ints[0]) // TODO think about ?:0
-        2 -> RepeatOperator(ints[0] ?: 0, ints[1])
-        else -> throw IllegalArgumentException("${TODO()}")
+        0 -> RepeatOperator(0, null, initialCursor, endingCursor) // TODO is it legal?
+        1 -> RepeatOperator(ints[0] ?: 0, ints[0], initialCursor, endingCursor) // TODO think about ?:0
+        2 -> RepeatOperator(ints[0] ?: 0, ints[1], initialCursor, endingCursor)
+        else -> throw ParseException("Unexpected number of parts in repeat operator", initialCursor, endingCursor)
     }
 }
 
 // TODO add indexes, for error reporting
 internal sealed interface Token
-object UnionOperator : Token
-object ConcatenationOperator : Token
-data class RepeatOperator(val min: Int, val max: Int?) : Token
-data class SymbolToken(val symbol: Symbol) : Token
-object LeftBracket : Token
-object RightBracket : Token
+internal data class UnionOperator(val at: Int) : Token
+internal data class ConcatenationOperator(val at: Int) : Token // TODO what to do here?
+internal data class RepeatOperator(val min: Int, val max: Int?, val fromIndex: Int, val toIndex: Int) : Token
+internal data class SymbolToken(val symbol: Symbol, val fromIndex: Int, val toIndex: Int) : Token
+internal data class LeftBracket(val at: Int) : Token
+internal data class RightBracket(val at: Int) : Token
 
 internal fun tokenize(str: String, alphabet: Set<Char>): List<Token> {
     val reader = Reader(str)
@@ -59,23 +68,24 @@ internal fun tokenize(str: String, alphabet: Set<Char>): List<Token> {
     val result = ArrayList<Token>()
 
     while (true) {
+        val cursor = reader.cursor()
         val next = reader.next() ?: break
         val token = when (next) {
-            '\\' -> SymbolToken(parseEscapedCharacter(reader, alphabet))
-            '[' -> SymbolToken(parseSetNotation(reader, alphabet))
-            '|' -> UnionOperator
-            '*' -> RepeatOperator(0, null)
-            '+' -> RepeatOperator(1, null)
-            '?' -> RepeatOperator(0, 1)
+            '\\' -> parseEscapedCharacter(reader, alphabet)
+            '[' -> parseSetNotation(reader, alphabet)
+            '|' -> UnionOperator(cursor)
+            '*' -> RepeatOperator(0, null, cursor, cursor)
+            '+' -> RepeatOperator(1, null, cursor, cursor)
+            '?' -> RepeatOperator(0, 1, cursor, cursor)
             '{' -> parseRepeatNotation(reader)
-            '(' -> LeftBracket
-            ')' -> RightBracket
-            '.' -> SymbolToken(Symbol(alphabet)) // TODO
-            else -> SymbolToken(Symbol(setOf(next)))
+            '(' -> LeftBracket(cursor)
+            ')' -> RightBracket(cursor)
+            '.' -> SymbolToken(Symbol(alphabet), cursor, cursor)
+            else -> SymbolToken(Symbol(setOf(next)), cursor, cursor)
         }
 
         if (result.isNotEmpty() && (result.last() is SymbolToken || result.last() is RightBracket) && (token is SymbolToken || token is LeftBracket))
-            result.add(ConcatenationOperator)
+            result.add(ConcatenationOperator(cursor))
         result.add(token)
     }
 
@@ -92,7 +102,6 @@ internal fun union(left: RegexPart, right: RegexPart): RegexPart = Union(
             (if (right is Union) right.parts else setOf(right))
 )
 
-
 fun parse(str: String): RegexPart {
     val tokens = tokenize(str, (0..127).map { it.toChar() }.toSet()) // TODO accept as parameter
 
@@ -103,7 +112,7 @@ fun parse(str: String): RegexPart {
         when (operator) {
             is RepeatOperator -> {
                 if (results.isEmpty()) {
-                    throw RuntimeException("") // TODO
+                    throw ParseException("No operand", operator.fromIndex, operator.toIndex)
                 }
                 results.push(Repeat(results.pop(), operator.min, operator.max))
             }
@@ -149,7 +158,7 @@ fun parse(str: String): RegexPart {
                     applyOperator(operatorStack.pop())
                 }
                 if (operatorStack.isEmpty() || operatorStack.pop() !is LeftBracket) {
-                    throw RuntimeException("Unbalanced right bracket at ${TODO()}")
+                    throw ParseException("Unbalanced right bracket", token.at)
                 }
             }
         }
@@ -158,7 +167,7 @@ fun parse(str: String): RegexPart {
     while (operatorStack.isNotEmpty()) {
         val token = operatorStack.pop()
         if (token is LeftBracket) {
-            throw RuntimeException("Unbalanced left bracket at ${TODO()}")
+            throw ParseException("Unbalanced left bracket", token.at)
         } else {
             applyOperator(token)
         }
