@@ -13,29 +13,26 @@ internal class Reader(private val str: String) {
     fun prevCursor(): Int = i - 1 // TODO ?
 }
 
-internal fun parseEscapedCharacter(reader: Reader, alphabet: Set<Char>): SymbolToken {
-    val cursor = reader.cursor()
-    val symbol = when (val char = reader.next()) {
+internal fun parseEscapedCharacter(reader: Reader, alphabet: Set<Char>): Set<Char> =
+    when (val char = reader.next()) {
         null -> throw ParseException("No character to escape", reader.prevCursor())
-        'd' -> Symbol(alphabet.filter { it.isDigit() }.toSet())
-        'D' -> Symbol(alphabet.filterNot { it.isDigit() }.toSet())
-        's' -> Symbol(alphabet.filter { it.isWhitespace() }.toSet())
-        'S' -> Symbol(alphabet.filterNot { it.isWhitespace() }.toSet())
-        'w' -> Symbol(alphabet.filter { it.isLetter() || it.isDigit() || it == '_' }.toSet())
-        'W' -> Symbol(alphabet.filterNot { it.isLetter() || it.isDigit() || it == '_' }.toSet())
-        't' -> Symbol(setOf('\t')) // TODO assert that it is in alphabet
-        'r' -> Symbol(setOf('\r'))
-        'n' -> Symbol(setOf('\n'))
-        'v' -> Symbol(setOf(0x0B.toChar()))
-        'a' -> Symbol(setOf(0x07.toChar()))
-        'e' -> Symbol(setOf(0x1B.toChar()))
-        'f' -> Symbol(setOf(0x0C.toChar()))
+        'd' -> alphabet.filter { it.isDigit() }.toSet()
+        'D' -> alphabet.filterNot { it.isDigit() }.toSet()
+        's' -> alphabet.filter { it.isWhitespace() }.toSet()
+        'S' -> alphabet.filterNot { it.isWhitespace() }.toSet()
+        'w' -> alphabet.filter { it.isLetter() || it.isDigit() || it == '_' }.toSet()
+        'W' -> alphabet.filterNot { it.isLetter() || it.isDigit() || it == '_' }.toSet()
+        't' -> setOf('\t') // TODO assert that it is in alphabet
+        'r' -> setOf('\r')
+        'n' -> setOf('\n')
+        'v' -> setOf(0x0B.toChar())
+        'a' -> setOf(0x07.toChar())
+        'e' -> setOf(0x1B.toChar())
+        'f' -> setOf(0x0C.toChar())
         'x' -> TODO("Hexadecimal")
         'u' -> TODO("Unicode")
-        else -> Symbol(setOf(char))
+        else -> setOf(char)
     }
-    return SymbolToken(symbol, cursor, cursor)
-}
 
 internal fun parseSetNotation(reader: Reader, alphabet: Set<Char>): SymbolToken {
     val initialCursor = reader.prevCursor()
@@ -44,12 +41,12 @@ internal fun parseSetNotation(reader: Reader, alphabet: Set<Char>): SymbolToken 
         val char = reader.next() ?: throw ParseException("Unbalanced square bracket", initialCursor)
         when (char) {
             ']' -> break
-            '\\' -> characters.addAll(parseEscapedCharacter(reader, alphabet).symbol.options)
+            '\\' -> characters.addAll(parseEscapedCharacter(reader, alphabet))
             else -> characters.add(char)
         }
     }
 
-    return SymbolToken(Symbol(characters), initialCursor, reader.prevCursor())
+    return SymbolToken(characters)
 }
 
 // TODO rework!
@@ -76,7 +73,7 @@ internal sealed interface Token
 internal data class UnionOperator(val at: Int) : Token
 internal data class ConcatenationOperator(val at: Int) : Token // TODO what to do here?
 internal data class RepeatOperator(val min: Int, val max: Int?, val fromIndex: Int, val toIndex: Int) : Token
-internal data class SymbolToken(val symbol: Symbol, val fromIndex: Int, val toIndex: Int) : Token
+internal data class SymbolToken(val characters: Set<Char>) : Token
 internal data class LeftBracket(val at: Int) : Token
 internal data class RightBracket(val at: Int) : Token
 
@@ -89,7 +86,7 @@ internal fun tokenize(str: String, alphabet: Set<Char>): List<Token> {
         val cursor = reader.cursor()
         val char = reader.next() ?: break
         val token = when (char) {
-            '\\' -> parseEscapedCharacter(reader, alphabet)
+            '\\' -> SymbolToken(parseEscapedCharacter(reader, alphabet))
             '[' -> parseSetNotation(reader, alphabet)
             '|' -> UnionOperator(cursor)
             '*' -> RepeatOperator(0, null, cursor, cursor)
@@ -98,8 +95,8 @@ internal fun tokenize(str: String, alphabet: Set<Char>): List<Token> {
             '{' -> parseRepeatNotation(reader)
             '(' -> LeftBracket(cursor)
             ')' -> RightBracket(cursor)
-            '.' -> SymbolToken(Symbol(alphabet), cursor, cursor)
-            else -> SymbolToken(Symbol(setOf(char)), cursor, cursor)
+            '.' -> SymbolToken(alphabet)
+            else -> SymbolToken(setOf(char))
         }
 
         if (result.isNotEmpty() &&
@@ -172,7 +169,7 @@ fun parse(str: String): RegexPart {
             }
 
             is RepeatOperator -> applyOperator(token)
-            is SymbolToken -> results.push(token.symbol)
+            is SymbolToken -> results.push(Symbol(token.characters))
             is LeftBracket -> operatorStack.push(token)
             is RightBracket -> {
                 while (operatorStack.isNotEmpty() && operatorStack.peek() !is LeftBracket) {
