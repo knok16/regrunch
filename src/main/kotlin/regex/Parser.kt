@@ -7,13 +7,25 @@ internal class Reader(private val str: String) {
     fun next(): Char? = if (i < str.length) str[i++] else null
 }
 
-internal fun parseEscapedCharacter(reader: Reader): Symbol = when (reader.next()) {
-    null -> TODO()
-    'd' -> Symbol(setOf('0', '1', '2', '3', '4', '5', '6', '7', '8', '9'))
-    else -> TODO()
+internal fun parseEscapedCharacter(reader: Reader, alphabet: Set<Char>): Symbol {
+    val char = reader.next()
+    return when (char) {
+        null -> TODO()
+        'd' -> Symbol(alphabet.filter { it.isDigit() }.toSet())
+        'D' -> Symbol(alphabet.filterNot { it.isDigit() }.toSet())
+        's' -> Symbol(alphabet.filter { it.isWhitespace() }.toSet())
+        'S' -> Symbol(alphabet.filterNot { it.isWhitespace() }.toSet())
+        'w' -> Symbol(alphabet.filter { it.isLetter() || it.isDigit() || it == '_' }.toSet())
+        'W' -> Symbol(alphabet.filterNot { it.isLetter() || it.isDigit() || it == '_' }.toSet())
+        't' -> Symbol(setOf('\t')) // TODO assert that it is in alphabet
+        'r' -> Symbol(setOf('\r'))
+        'n' -> Symbol(setOf('\n'))
+        '\\', '.', '|', '(', ')', '[', '{', '*', '+', '?' -> Symbol(setOf(char))
+        else -> throw IllegalArgumentException("Unexpected escaped character '$char' at ") // TODO
+    }
 }
 
-internal fun parseSetNotation(reader: Reader): Symbol = TODO()
+internal fun parseSetNotation(reader: Reader, alphabet: Set<Char>): Symbol = TODO()
 
 // TODO rework!
 internal fun parseRepeatNotation(reader: Reader): RepeatOperator {
@@ -41,7 +53,7 @@ data class SymbolToken(val symbol: Symbol) : Token
 object LeftBracket : Token
 object RightBracket : Token
 
-internal fun tokenize(str: String): List<Token> {
+internal fun tokenize(str: String, alphabet: Set<Char>): List<Token> {
     val reader = Reader(str)
 
     val result = ArrayList<Token>()
@@ -49,8 +61,8 @@ internal fun tokenize(str: String): List<Token> {
     while (true) {
         val next = reader.next() ?: break
         val token = when (next) {
-            '\\' -> SymbolToken(parseEscapedCharacter(reader))
-            '[' -> SymbolToken(parseSetNotation(reader))
+            '\\' -> SymbolToken(parseEscapedCharacter(reader, alphabet))
+            '[' -> SymbolToken(parseSetNotation(reader, alphabet))
             '|' -> UnionOperator
             '*' -> RepeatOperator(0, null)
             '+' -> RepeatOperator(1, null)
@@ -58,7 +70,7 @@ internal fun tokenize(str: String): List<Token> {
             '{' -> parseRepeatNotation(reader)
             '(' -> LeftBracket
             ')' -> RightBracket
-            '.' -> SymbolToken(Symbol((0..127).map { it.toChar() }.toSet())) // TODO
+            '.' -> SymbolToken(Symbol(alphabet)) // TODO
             else -> SymbolToken(Symbol(setOf(next)))
         }
 
@@ -82,7 +94,7 @@ internal fun union(left: RegexPart, right: RegexPart): RegexPart = Union(
 
 
 fun parse(str: String): RegexPart {
-    val tokens = tokenize(str)
+    val tokens = tokenize(str, (0..127).map { it.toChar() }.toSet()) // TODO accept as parameter
 
     val results = Stack<RegexPart>()
     val operatorStack = Stack<Token>()
