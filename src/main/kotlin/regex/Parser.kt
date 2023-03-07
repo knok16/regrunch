@@ -65,7 +65,7 @@ internal fun parseRepeatNotation(reader: Reader): RepeatOperator {
     val endingCursor = reader.prevCursor()
     return when (ints.size) {
         0 -> RepeatOperator(0, null, initialCursor, endingCursor) // TODO is it legal?
-        1 -> RepeatOperator(ints[0] ?: 0, ints[0], initialCursor, endingCursor) // TODO think about ?:0
+        1 -> RepeatOperator(ints[0]!!, ints[0], initialCursor, endingCursor) // TODO think about !!
         2 -> RepeatOperator(ints[0] ?: 0, ints[1], initialCursor, endingCursor)
         else -> throw ParseException("Unexpected number of parts in repeat operator", initialCursor, endingCursor)
     }
@@ -102,7 +102,10 @@ internal fun tokenize(str: String, alphabet: Set<Char>): List<Token> {
             else -> SymbolToken(Symbol(setOf(char)), cursor, cursor)
         }
 
-        if (result.isNotEmpty() && (result.last() is SymbolToken || result.last() is RightBracket) && (token is SymbolToken || token is LeftBracket))
+        if (result.isNotEmpty() &&
+            (result.last() is RepeatOperator || result.last() is SymbolToken || result.last() is RightBracket) &&
+            (token is SymbolToken || token is LeftBracket)
+        )
             result.add(ConcatenationOperator(cursor))
         result.add(token)
     }

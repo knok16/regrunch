@@ -208,6 +208,14 @@ class ParserTest {
     }
 
     @Test
+    fun severalRepeatOperators() {
+        assertEquals(
+            Repeat(Repeat(Repeat(Repeat(symbol('a'), 0, null), 1, null), 0, 1), 2, 2),
+            parse("""a*+?{2}""")
+        )
+    }
+
+    @Test
     fun repeatOperatorNoClosingCurlyBracket() {
         assertFailsWith<ParseException>("Unbalanced curly bracket") {
             parse("""abc{1,2""")
@@ -282,21 +290,25 @@ class ParserTest {
     @Test
     fun concatenationAndKleeneStarOrder() {
         assertEquals(concatenation(symbol('a'), Repeat(symbol('b'), 0, null)), parse("""ab*"""))
+        assertEquals(concatenation(Repeat(symbol('a'), 0, null), symbol('b')), parse("""a*b"""))
     }
 
     @Test
     fun concatenationAndPlusOrder() {
         assertEquals(concatenation(symbol('a'), Repeat(symbol('b'), 1, null)), parse("""ab+"""))
+        assertEquals(concatenation(Repeat(symbol('a'), 1, null), symbol('b')), parse("""a+b"""))
     }
 
     @Test
     fun concatenationAndQuestionMarkOrder() {
         assertEquals(concatenation(symbol('a'), Repeat(symbol('b'), 0, 1)), parse("""ab?"""))
+        assertEquals(concatenation(Repeat(symbol('a'), 0, 1), symbol('b')), parse("""a?b"""))
     }
 
     @Test
     fun concatenationAndRepeatOrder() {
         assertEquals(concatenation(symbol('a'), Repeat(symbol('b'), 2, 4)), parse("""ab{2,4}"""))
+        assertEquals(concatenation(Repeat(symbol('a'), 2, 4), symbol('b')), parse("""a{2,4}b"""))
     }
 
     @Test
