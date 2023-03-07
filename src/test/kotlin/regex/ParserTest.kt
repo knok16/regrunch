@@ -94,11 +94,10 @@ class ParserTest {
 
     @Test
     fun nothingToEscape() {
-        assertFailsWith<ParseException>("No character to escape") {
+        assertFailsWith<ParseException> {
             parse("""abc\""")
         }.let {
-            assertEquals(3, it.fromIndex)
-            assertEquals(3, it.toIndex)
+            assertEquals(ParseException("No character to escape", 3), it)
         }
     }
 
@@ -114,33 +113,29 @@ class ParserTest {
 
     @Test
     fun unionNoLeftOperand() {
-        assertFailsWith<ParseException>("No left operand") {
+        assertFailsWith<ParseException> {
             parse("""|b""")
         }.let {
-            assertEquals(0, it.fromIndex)
-            assertEquals(0, it.toIndex)
+            assertEquals(ParseException("No left operand", 0), it)
         }
-        assertFailsWith<ParseException>("No left operand") {
+        assertFailsWith<ParseException> {
             parse("""ab(|c)""")
         }.let {
-            assertEquals(3, it.fromIndex)
-            assertEquals(3, it.toIndex)
+            assertEquals(ParseException("No left operand", 3), it)
         }
     }
 
     @Test
     fun unionNoRightOperand() {
-        assertFailsWith<ParseException>("No right operand") {
+        assertFailsWith<ParseException> {
             parse("""b|""")
         }.let {
-            assertEquals(1, it.fromIndex)
-            assertEquals(1, it.toIndex)
+            assertEquals(ParseException("No right operand", 1), it)
         }
-        assertFailsWith<ParseException>("No right operand") {
+        assertFailsWith<ParseException> {
             parse("""(a|)bc""")
         }.let {
-            assertEquals(2, it.fromIndex)
-            assertEquals(2, it.toIndex)
+            assertEquals(ParseException("No right operand", 2), it)
         }
     }
 
@@ -151,17 +146,15 @@ class ParserTest {
 
     @Test
     fun kleeneStarNoOperand() {
-        assertFailsWith<ParseException>("No operand") {
+        assertFailsWith<ParseException> {
             parse("""*b""")
         }.let {
-            assertEquals(0, it.fromIndex)
-            assertEquals(0, it.toIndex)
+            assertEquals(ParseException("No operand", 0), it)
         }
-        assertFailsWith<ParseException>("No operand") {
+        assertFailsWith<ParseException> {
             parse("""ab(*c)""")
         }.let {
-            assertEquals(3, it.fromIndex)
-            assertEquals(3, it.toIndex)
+            assertEquals(ParseException("No operand", 3), it)
         }
     }
 
@@ -172,17 +165,15 @@ class ParserTest {
 
     @Test
     fun plusOperatorNoOperand() {
-        assertFailsWith<ParseException>("No operand") {
+        assertFailsWith<ParseException> {
             parse("""+b""")
         }.let {
-            assertEquals(0, it.fromIndex)
-            assertEquals(0, it.toIndex)
+            assertEquals(ParseException("No operand", 0), it)
         }
-        assertFailsWith<ParseException>("No operand") {
+        assertFailsWith<ParseException> {
             parse("""ab(+c)""")
         }.let {
-            assertEquals(3, it.fromIndex)
-            assertEquals(3, it.toIndex)
+            assertEquals(ParseException("No operand", 3), it)
         }
     }
 
@@ -193,17 +184,15 @@ class ParserTest {
 
     @Test
     fun questionMarkOperatorNoOperand() {
-        assertFailsWith<ParseException>("No operand") {
+        assertFailsWith<ParseException> {
             parse("""?b""")
         }.let {
-            assertEquals(0, it.fromIndex)
-            assertEquals(0, it.toIndex)
+            assertEquals(ParseException("No operand", 0), it)
         }
-        assertFailsWith<ParseException>("No operand") {
+        assertFailsWith<ParseException> {
             parse("""ab(?c)""")
         }.let {
-            assertEquals(3, it.fromIndex)
-            assertEquals(3, it.toIndex)
+            assertEquals(ParseException("No operand", 3), it)
         }
     }
 
@@ -235,47 +224,42 @@ class ParserTest {
 
     @Test
     fun repeatOperatorNoClosingCurlyBracket() {
-        assertFailsWith<ParseException>("Unbalanced curly bracket") {
+        assertFailsWith<ParseException> {
             parse("""abc{1,2""")
         }.let {
-            assertEquals(3, it.fromIndex)
-            assertEquals(3, it.toIndex)
+            assertEquals(ParseException("Unbalanced curly bracket", 3), it)
         }
     }
 
     @Test
     fun repeatOperatorTooManyIntegers() {
-        assertFailsWith<ParseException>("Unexpected number of parts in repeat operator") {
+        assertFailsWith<ParseException> {
             parse("""abc{1,22,3}""")
         }.let {
-            assertEquals(3, it.fromIndex)
-            assertEquals(10, it.toIndex)
+            assertEquals(ParseException("Unexpected number of parts in repeat operator", 3, 10), it)
         }
     }
 
     @Test
     fun repeatOperatorNotAnInteger() {
-        assertFailsWith<ParseException>("Not an integer parameter of repeat operator") {
+        assertFailsWith<ParseException> {
             parse("""abc{1,abc}""")
         }.let {
-            assertEquals(6, it.fromIndex)
-            assertEquals(8, it.toIndex)
+            assertEquals(ParseException("Not an integer parameter of repeat operator", 6, 8), it)
         }
     }
 
     @Test
     fun repeatOperatorNoOperand() {
-        assertFailsWith<ParseException>("No operand") {
+        assertFailsWith<ParseException> {
             parse("""{2}b""")
         }.let {
-            assertEquals(0, it.fromIndex)
-            assertEquals(2, it.toIndex)
+            assertEquals(ParseException("No operand", 0, 2), it)
         }
-        assertFailsWith<ParseException>("No operand") {
+        assertFailsWith<ParseException> {
             parse("""ab({3,7}c)""")
         }.let {
-            assertEquals(3, it.fromIndex)
-            assertEquals(7, it.toIndex)
+            assertEquals(ParseException("No operand", 3, 7), it)
         }
     }
 
@@ -342,18 +326,16 @@ class ParserTest {
         assertFailsWith<ParseException>("Unbalanced left bracket") {
             parse("""ab(cd(e|f)g""")
         }.let {
-            assertEquals(2, it.fromIndex)
-            assertEquals(2, it.toIndex)
+            assertEquals(ParseException("_________________", 2), it)
         }
     }
 
     @Test
     fun unbalancedRightBracket() {
-        assertFailsWith<ParseException>("Unbalanced right bracket") {
+        assertFailsWith<ParseException> {
             parse("""ab(c|d)e)f)g""")
         }.let {
-            assertEquals(8, it.fromIndex)
-            assertEquals(8, it.toIndex)
+            assertEquals(ParseException("Unbalanced right bracket", 8), it)
         }
     }
 
@@ -364,11 +346,10 @@ class ParserTest {
 
     @Test
     fun setNotationNoClosingBracket() {
-        assertFailsWith<ParseException>("Unbalanced square bracket") {
+        assertFailsWith<ParseException> {
             parse("""abc[123""")
         }.let {
-            assertEquals(3, it.fromIndex)
-            assertEquals(3, it.toIndex)
+            assertEquals(ParseException("Unbalanced square bracket", 3), it)
         }
     }
 
