@@ -15,7 +15,22 @@ internal fun parseEscapedCharacter(reader: Reader): Symbol = when (reader.next()
 
 internal fun parseSetNotation(reader: Reader): Symbol = TODO()
 
-internal fun parseRepeatNotation(reader: Reader): RepeatOperator = TODO()
+// TODO rework!
+internal fun parseRepeatNotation(reader: Reader): RepeatOperator {
+    val s = StringBuilder()
+    while (true) {
+        val token = reader.next() ?: throw IllegalArgumentException("Unbalanced curly bracket at ${TODO()}")
+        if (token == '}') break else s.append(token)
+    }
+    val ints = s.toString().split(',').map { it.trim() }.map { it.takeIf { it.isNotBlank() } }
+        .map { it?.toInt() } // TODO add error handling
+    return when (ints.size) {
+        0 -> RepeatOperator(0, null) // TODO is it legal?
+        1 -> RepeatOperator(ints[0] ?: 0, ints[0]) // TODO think about ?:0
+        2 -> RepeatOperator(ints[0] ?: 0, ints[1])
+        else -> throw IllegalArgumentException("${TODO()}")
+    }
+}
 
 // TODO add indexes, for error reporting
 internal sealed interface Token
