@@ -26,21 +26,39 @@ internal fun parseEscapedCharacter(reader: Reader, alphabet: Set<Char>): SymbolT
         't' -> Symbol(setOf('\t')) // TODO assert that it is in alphabet
         'r' -> Symbol(setOf('\r'))
         'n' -> Symbol(setOf('\n'))
-        '\\', '.', '|', '(', ')', '[', '{', '*', '+', '?' -> Symbol(setOf(char))
-        else -> throw ParseException("Unexpected escaped character '$char'", reader.prevCursor())
+        'v' -> Symbol(setOf(0x0B.toChar()))
+        'a' -> Symbol(setOf(0x07.toChar()))
+        'e' -> Symbol(setOf(0x1B.toChar()))
+        'f' -> Symbol(setOf(0x0C.toChar()))
+        'x' -> TODO("Hexadecimal")
+        'u' -> TODO("Unicode")
+        else -> Symbol(setOf(char))
     }
     return SymbolToken(symbol, cursor, cursor)
 }
 
-internal fun parseSetNotation(reader: Reader, alphabet: Set<Char>): SymbolToken = TODO()
+internal fun parseSetNotation(reader: Reader, alphabet: Set<Char>): SymbolToken {
+    val initialCursor = reader.prevCursor()
+    val characters = HashSet<Char>()
+    while (true) {
+        val char = reader.next() ?: throw ParseException("Unbalanced square bracket", initialCursor)
+        when (char) {
+            ']' -> break
+            '\\' -> characters.addAll(parseEscapedCharacter(reader, alphabet).symbol.options)
+            else -> characters.add(char)
+        }
+    }
+
+    return SymbolToken(Symbol(characters), initialCursor, reader.prevCursor())
+}
 
 // TODO rework!
 internal fun parseRepeatNotation(reader: Reader): RepeatOperator {
     val initialCursor = reader.prevCursor()
     val s = StringBuilder()
     while (true) {
-        val token = reader.next() ?: throw ParseException("Unbalanced curly bracket", initialCursor)
-        if (token == '}') break else s.append(token)
+        val char = reader.next() ?: throw ParseException("Unbalanced curly bracket", initialCursor)
+        if (char == '}') break else s.append(char)
     }
     val ints = s.toString().split(',').map { it.trim() }.map { it.takeIf { it.isNotBlank() } }
         .map { it?.toInt() } // TODO add error handling
@@ -69,8 +87,8 @@ internal fun tokenize(str: String, alphabet: Set<Char>): List<Token> {
 
     while (true) {
         val cursor = reader.cursor()
-        val next = reader.next() ?: break
-        val token = when (next) {
+        val char = reader.next() ?: break
+        val token = when (char) {
             '\\' -> parseEscapedCharacter(reader, alphabet)
             '[' -> parseSetNotation(reader, alphabet)
             '|' -> UnionOperator(cursor)
@@ -81,7 +99,7 @@ internal fun tokenize(str: String, alphabet: Set<Char>): List<Token> {
             '(' -> LeftBracket(cursor)
             ')' -> RightBracket(cursor)
             '.' -> SymbolToken(Symbol(alphabet), cursor, cursor)
-            else -> SymbolToken(Symbol(setOf(next)), cursor, cursor)
+            else -> SymbolToken(Symbol(setOf(char)), cursor, cursor)
         }
 
         if (result.isNotEmpty() && (result.last() is SymbolToken || result.last() is RightBracket) && (token is SymbolToken || token is LeftBracket))

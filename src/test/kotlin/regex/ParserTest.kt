@@ -10,6 +10,18 @@ private fun concatenation(vararg parts: RegexPart) = Concatenation(parts.toList(
 
 class ParserTest {
     private val alphabet = (0..127).map { it.toChar() }.toSet()
+    private val whitespaces = setOf(
+        ' ',
+        '\t',
+        '\r',
+        '\n',
+        0x0B.toChar(), // Vertical Tab
+        0x0C.toChar(), // Form Feed
+        0x1C.toChar(), // File Separator
+        0x1D.toChar(), // Group Separator
+        0x1E.toChar(), // Record Separator
+        0x1F.toChar(), // Unit Separator
+    )
 
     @Test
     fun simpleParse() {
@@ -58,22 +70,17 @@ class ParserTest {
     }
 
     @Test
+    fun escapedAnyRegularCharacter() {
+        assertEquals(concatenation(symbol('a'), symbol('7'), symbol('b')), parse("""a\7b"""))
+    }
+
+    @Test
     fun nothingToEscape() {
         assertFailsWith<ParseException>("No character to escape") {
             parse("""abc\""")
         }.let {
             assertEquals(3, it.fromIndex)
             assertEquals(3, it.toIndex)
-        }
-    }
-
-    @Test
-    fun unexpectedEscapedCharacter() {
-        assertFailsWith<ParseException>("Unexpected escaped character '0'") {
-            parse("""abc\0def""")
-        }.let {
-            assertEquals(4, it.fromIndex)
-            assertEquals(4, it.toIndex)
         }
     }
 
@@ -326,6 +333,16 @@ class ParserTest {
     }
 
     @Test
+    fun setNotationNoClosingBracket() {
+        assertFailsWith<ParseException>("Unbalanced square bracket") {
+            parse("""abc[123""")
+        }.let {
+            assertEquals(3, it.fromIndex)
+            assertEquals(3, it.toIndex)
+        }
+    }
+
+    @Test
     fun setNotationRanges() {
         assertEquals(symbol('3', '4', '5', '6', '7', 'b', 'c', 'd', '9'), parse("""[3-7b-d9]"""))
     }
@@ -385,7 +402,7 @@ class ParserTest {
 
     @Test
     fun shorthandCharacterClassesWhitespaceCharacters() {
-        val expected = symbol(' ', '\t', '\r', '\n', 0x0C.toChar())
+        val expected = Symbol(whitespaces)
         assertEquals(expected, parse("""\s"""))
         assertEquals(expected, parse("""[\s]"""))
     }
@@ -406,7 +423,7 @@ class ParserTest {
 
     @Test
     fun shorthandCharacterClassesNonWhitespaceCharacters() {
-        val expected = Symbol(alphabet - setOf(' ', '\t', '\r', '\n', 0x0C.toChar()))
+        val expected = Symbol(alphabet - whitespaces)
         assertEquals(expected, parse("""\S"""))
         assertEquals(expected, parse("""[\S]"""))
     }
