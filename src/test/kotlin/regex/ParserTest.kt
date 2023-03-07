@@ -54,6 +54,24 @@ class ParserTest {
     }
 
     @Test
+    fun noControlCharacter() {
+        assertFailsWith<ParseException> {
+            parse("""\c""")
+        }.let {
+            assertEquals(ParseException("No control character", 1), it)
+        }
+    }
+
+    @Test
+    fun unexpectedControlCharacter() {
+        assertFailsWith<ParseException> {
+            parse("""\c8""")
+        }.let {
+            assertEquals(ParseException("Unexpected control character '8' (only 'A'-'Z' allowed)", 2), it)
+        }
+    }
+
+    @Test
     fun escapingSpecialCharacters() {
         assertEquals(concatenation(symbol('\\'), Symbol(alphabet)), parse("""\\."""))
         assertEquals(symbol('.'), parse("""\."""))

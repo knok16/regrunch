@@ -2,7 +2,8 @@ package regex
 
 import java.util.*
 
-class ParseException constructor(message: String, val fromIndex: Int, val toIndex: Int) : Exception(message) {
+data class ParseException constructor(override val message: String, val fromIndex: Int, val toIndex: Int) :
+    Exception(message) {
     constructor(message: String, at: Int) : this(message, at, at)
 }
 
@@ -31,6 +32,15 @@ internal fun parseEscapedCharacter(reader: Reader, alphabet: Set<Char>): Set<Cha
         'f' -> setOf(0x0C.toChar())
         'x' -> TODO("Hexadecimal")
         'u' -> TODO("Unicode")
+        'c' -> {
+            val control = reader.next() ?: throw ParseException("No control character", reader.prevCursor())
+            if (control in 'A'..'Z') setOf((control - 'A' + 1).toChar())
+            else throw ParseException(
+                "Unexpected control character '$control' (only 'A'-'Z' allowed)",
+                reader.prevCursor()
+            )
+        }
+
         else -> setOf(char)
     }
 
