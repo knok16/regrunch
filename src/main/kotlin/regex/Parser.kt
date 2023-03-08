@@ -10,6 +10,7 @@ data class ParseException constructor(override val message: String, val fromInde
 internal class Reader(private val str: String) {
     private var i = 0
     fun next(): Char? = if (i < str.length) str[i++] else null
+    fun peek(): Char? = if (i < str.length) str[i] else null
     fun cursor(): Int = i
     fun prevCursor(): Int = i - 1 // TODO ?
 }
@@ -30,8 +31,29 @@ internal fun parseEscapedCharacter(reader: Reader, alphabet: Set<Char>): Set<Cha
         'a' -> setOf(0x07.toChar())
         'e' -> setOf(0x1B.toChar())
         'f' -> setOf(0x0C.toChar())
-        'x' -> TODO("Hexadecimal")
-        'u' -> TODO("Unicode")
+        'x' -> {
+            var digit = reader.peek() ?: throw ParseException(
+                """Expected a number after \x, but get end of string""",
+                reader.prevCursor()
+            )
+
+            fun isHexadecimal(char: Char?): Boolean = char in '0'..'9' || char in 'A'..'F' || char in 'a'..'f'
+            if (!isHexadecimal(digit)) throw ParseException("Not a hexadecimal number", reader.cursor())
+
+            var code = 0
+            while (isHexadecimal(digit)) {
+                code = code * 0x10 + when (digit) {
+                    in '0'..'9' -> digit - '0'
+                    in 'A'..'F' -> digit - 'A' + 10
+                    in 'a'..'f' -> digit - 'a' + 10
+                    else -> throw RuntimeException("Unreachable code, unexpected to get non-hexadecimal number")
+                }
+                reader.next()
+                digit = reader.peek() ?: break
+            }
+            setOf(code.toChar())
+        }
+
         'c' -> {
             val control = reader.next() ?: throw ParseException("No control character", reader.prevCursor())
             if (control in 'A'..'Z') setOf((control - 'A' + 1).toChar())

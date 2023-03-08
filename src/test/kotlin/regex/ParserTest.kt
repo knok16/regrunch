@@ -453,6 +453,24 @@ class ParserTest {
     }
 
     @Test
+    fun hexadecimalNotationEndsAbruptly() {
+        assertFailsWith<ParseException> {
+            parse("""abc\x""")
+        }.let {
+            assertEquals(ParseException("""Expected a number after \x, but get end of string""", 4), it)
+        }
+    }
+
+    @Test
+    fun hexadecimalNotationNotANumber() {
+        assertFailsWith<ParseException> {
+            parse("""abc\xNO""")
+        }.let {
+            assertEquals(ParseException("Not a hexadecimal number", 5), it)
+        }
+    }
+
+    @Test
     fun freeSpaceMode() {
         assertEquals(concatenation(symbol('a'), symbol('b'), symbol('c')), parse("""a b c"""))
         assertEquals(concatenation(symbol('a'), symbol('b'), symbol('c'), symbol(' ')), parse("""[a b c]"""))
