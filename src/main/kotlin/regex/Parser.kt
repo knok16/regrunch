@@ -69,6 +69,8 @@ internal fun parseEscapedCharacter(reader: Reader, alphabet: Set<Char>): Set<Cha
 internal fun parseSetNotation(reader: Reader, alphabet: Set<Char>): SymbolToken {
     val initialCursor = reader.prevCursor()
     val characters = HashSet<Char>()
+    val negate = reader.peek() == '^'
+    if (negate) reader.next()
     while (true) {
         val char = reader.next() ?: throw ParseException("Unbalanced square bracket", initialCursor)
         when (char) {
@@ -78,7 +80,7 @@ internal fun parseSetNotation(reader: Reader, alphabet: Set<Char>): SymbolToken 
         }
     }
 
-    return SymbolToken(characters)
+    return SymbolToken(if (negate) alphabet - characters else characters)
 }
 
 // TODO rework!
