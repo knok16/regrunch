@@ -130,7 +130,7 @@ internal fun tokenize(str: String, alphabet: Set<Char>): List<Token> {
             '(' -> LeftBracket(cursor)
             ')' -> RightBracket(cursor)
             '.' -> SymbolToken(alphabet)
-            else -> SymbolToken(setOf(char))
+            else -> if (char.isWhitespace()) continue else SymbolToken(setOf(char))
         }
 
         if (result.isNotEmpty() &&
