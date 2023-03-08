@@ -156,6 +156,11 @@ class ParserTest {
         }.let {
             assertEquals(ParseException("No operand", 3), it)
         }
+        assertFailsWith<ParseException> {
+            parse("""ab(c|*)""")
+        }.let {
+            assertEquals(ParseException("No operand", 5), it)
+        }
     }
 
     @Test
@@ -175,6 +180,11 @@ class ParserTest {
         }.let {
             assertEquals(ParseException("No operand", 3), it)
         }
+        assertFailsWith<ParseException> {
+            parse("""ab(c|+)""")
+        }.let {
+            assertEquals(ParseException("No operand", 5), it)
+        }
     }
 
     @Test
@@ -193,6 +203,11 @@ class ParserTest {
             parse("""ab(?c)""")
         }.let {
             assertEquals(ParseException("No operand", 3), it)
+        }
+        assertFailsWith<ParseException> {
+            parse("""ab(c|?)""")
+        }.let {
+            assertEquals(ParseException("No operand", 5), it)
         }
     }
 
@@ -260,6 +275,11 @@ class ParserTest {
             parse("""ab({3,7}c)""")
         }.let {
             assertEquals(ParseException("No operand", 3, 7), it)
+        }
+        assertFailsWith<ParseException> {
+            parse("""ab(c|{3,7})""")
+        }.let {
+            assertEquals(ParseException("No operand", 5, 9), it)
         }
     }
 
