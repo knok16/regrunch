@@ -76,7 +76,21 @@ internal fun parseSetNotation(reader: Reader, alphabet: Set<Char>): SymbolToken 
         when (char) {
             ']' -> break
             '\\' -> characters.addAll(parseEscapedCharacter(reader, alphabet))
-            else -> characters.add(char)
+            else -> if (reader.peek() == '-') {
+                reader.next() // pop '-' character
+                val from = char
+                val to = reader.next() ?: throw ParseException("Unbalanced square bracket", initialCursor)
+                if (to == ']') {
+                    characters.add(char)
+                    characters.add('-')
+                    break
+                } else {
+                    // TODO add validation
+                    characters.addAll(from..to)
+                }
+            } else {
+                characters.add(char)
+            }
         }
     }
 

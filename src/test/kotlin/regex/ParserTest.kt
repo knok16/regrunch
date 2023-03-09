@@ -343,10 +343,10 @@ class ParserTest {
 
     @Test
     fun unbalancedLeftBracket() {
-        assertFailsWith<ParseException>("Unbalanced left bracket") {
+        assertFailsWith<ParseException> {
             parse("""ab(cd(e|f)g""")
         }.let {
-            assertEquals(ParseException("_________________", 2), it)
+            assertEquals(ParseException("Unbalanced left bracket", 2), it)
         }
     }
 
@@ -371,6 +371,11 @@ class ParserTest {
         }.let {
             assertEquals(ParseException("Unbalanced square bracket", 3), it)
         }
+        assertFailsWith<ParseException> {
+            parse("""abc[123-""")
+        }.let {
+            assertEquals(ParseException("Unbalanced square bracket", 3), it)
+        }
     }
 
     @Test
@@ -382,8 +387,8 @@ class ParserTest {
     fun setNotationRangesExceptions() {
         assertEquals(symbol('-', 'x'), parse("""[-x]"""))
         assertEquals(symbol('-', 'x'), parse("""[x-]"""))
-        assertEquals(Symbol(alphabet - setOf('_', 'x')), parse("""[^-x]"""))
-        assertEquals(Symbol(alphabet - setOf('_', 'x')), parse("""[^x-]"""))
+        assertEquals(Symbol(alphabet - setOf('-', 'x')), parse("""[^-x]"""))
+        assertEquals(Symbol(alphabet - setOf('-', 'x')), parse("""[^x-]"""))
     }
 
     @Test
