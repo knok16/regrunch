@@ -116,7 +116,6 @@ internal fun parseRepeatNotation(reader: Reader): RepeatOperator {
     }
 }
 
-// TODO add indexes, for error reporting
 internal sealed interface Token
 internal data class UnionOperator(val at: Int) : Token
 internal data class ConcatenationOperator(val at: Int) : Token // TODO what to do here?
