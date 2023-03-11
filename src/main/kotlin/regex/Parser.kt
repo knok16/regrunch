@@ -143,6 +143,8 @@ internal fun tokenize(str: String): List<Token> {
             '(' -> LeftBracket(cursor)
             ')' -> RightBracket(cursor)
             '.' -> SymbolToken(AnySymbol)
+            '^' -> SymbolToken(BeginningOfLine)
+            '$' -> SymbolToken(EndOfLine)
             else -> if (char.isWhitespace()) continue else SymbolToken(ExactSymbol(char))
         }
 

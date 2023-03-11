@@ -61,6 +61,8 @@ class ParserTest {
     fun escapingSpecialCharacters() {
         assertEquals(concatenation(symbol('\\'), AnySymbol), parse("""\\."""))
         assertEquals(symbol('.'), parse("""\."""))
+        assertEquals(symbol('^'), parse("""\^"""))
+        assertEquals(symbol('$'), parse("""\$"""))
         assertEquals(concatenation(symbol('a'), symbol('|'), symbol('b')), parse("""a\|b"""))
         assertEquals(concatenation(symbol('('), symbol('a'), symbol(')')), parse("""\(a\)"""))
         assertEquals(concatenation(symbol('['), symbol('a'), symbol(']')), parse("""\[a]"""))
@@ -387,6 +389,8 @@ class ParserTest {
         assertEquals(SetNotationSymbol(symbols('x', 'y', '|')), parse("""[x|y]"""))
         assertEquals(SetNotationSymbol(symbols('x', '(', ')')), parse("""[(x)]"""))
         assertEquals(SetNotationSymbol(symbols('x', '{', '}', '1', '2', ',')), parse("""[x{1,2}]"""))
+        assertEquals(SetNotationSymbol(symbols('x', '^')), parse("""[x^]"""))
+        assertEquals(SetNotationSymbol(symbols('x', '$')), parse("""[x$]"""))
     }
 
     @Test
@@ -480,5 +484,19 @@ class ParserTest {
         assertEquals(concatenation(symbol('a'), symbol('b'), symbol('c')), parse("""a${System.lineSeparator()}b c"""))
         assertEquals(SetNotationSymbol(symbols('a', 'b', 'c', ' ')), parse("""[a b c]"""))
         assertEquals(concatenation(symbol(' '), symbol('d')), parse("""\ d"""))
+    }
+
+    @Test
+    fun beginningOfLineSymbol() {
+        assertEquals(BeginningOfLine, parse("^"))
+        assertEquals(concatenation(BeginningOfLine, symbol('a'), symbol('b')), parse("^ab"))
+        assertEquals(concatenation(symbol('a'), BeginningOfLine, symbol('b')), parse("a^b"))
+    }
+
+    @Test
+    fun endOfLineSymbol() {
+        assertEquals(EndOfLine, parse("$"))
+        assertEquals(concatenation(symbol('a'), symbol('b'), EndOfLine), parse("ab$"))
+        assertEquals(concatenation(symbol('a'), EndOfLine, symbol('b')), parse("a\$b"))
     }
 }
