@@ -4,25 +4,11 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-private fun symbol(vararg symbols: Char) = Symbol(symbols.toSet())
-private fun union(vararg parts: RegexPart) = Union(parts.toSet())
+private fun symbol(symbol: Char) = ExactSymbol(symbol)
+private fun symbols(vararg symbols: Char) = symbols.map { ExactSymbol(it) }.toSet()
 private fun concatenation(vararg parts: RegexPart) = Concatenation(parts.toList())
 
 class ParserTest {
-    private val alphabet = (0..127).map { it.toChar() }.toSet()
-    private val whitespaces = setOf(
-        ' ',
-        '\t',
-        '\r',
-        '\n',
-        0x0B.toChar(), // Vertical Tab
-        0x0C.toChar(), // Form Feed
-        0x1C.toChar(), // File Separator
-        0x1D.toChar(), // Group Separator
-        0x1E.toChar(), // Record Separator
-        0x1F.toChar(), // Unit Separator
-    )
-
     @Test
     fun simpleParse() {
         assertEquals(symbol('a'), parse("""a"""))
@@ -30,7 +16,7 @@ class ParserTest {
 
     @Test
     fun periodSpecialSymbol() {
-        assertEquals(Symbol(alphabet), parse("""."""))
+        assertEquals(AnySymbol, parse("""."""))
     }
 
     @Test
@@ -73,7 +59,7 @@ class ParserTest {
 
     @Test
     fun escapingSpecialCharacters() {
-        assertEquals(concatenation(symbol('\\'), Symbol(alphabet)), parse("""\\."""))
+        assertEquals(concatenation(symbol('\\'), AnySymbol), parse("""\\."""))
         assertEquals(symbol('.'), parse("""\."""))
         assertEquals(concatenation(symbol('a'), symbol('|'), symbol('b')), parse("""a\|b"""))
         assertEquals(concatenation(symbol('('), symbol('a'), symbol(')')), parse("""\(a\)"""))
@@ -361,7 +347,7 @@ class ParserTest {
 
     @Test
     fun setNotationSimple() {
-        assertEquals(symbol('a', 'b', 'd', '0'), parse("""[abd0]"""))
+        assertEquals(SetNotationSymbol(symbols('a', 'b', 'd', '0')), parse("""[abd0]"""))
     }
 
     @Test
@@ -380,101 +366,95 @@ class ParserTest {
 
     @Test
     fun setNotationRanges() {
-        assertEquals(symbol('3', '4', '5', '6', '7', 'b', 'c', 'd', '9'), parse("""[3-7b-d9]"""))
+        assertEquals(SetNotationSymbol(symbols('3', '4', '5', '6', '7', 'b', 'c', 'd', '9')), parse("""[3-7b-d9]"""))
     }
 
     @Test
     fun setNotationRangesExceptions() {
-        assertEquals(symbol('-', 'x'), parse("""[-x]"""))
-        assertEquals(symbol('-', 'x'), parse("""[x-]"""))
-        assertEquals(Symbol(alphabet - setOf('-', 'x')), parse("""[^-x]"""))
-        assertEquals(Symbol(alphabet - setOf('-', 'x')), parse("""[^x-]"""))
+        assertEquals(SetNotationSymbol(symbols('-', 'x')), parse("""[-x]"""))
+        assertEquals(SetNotationSymbol(symbols('-', 'x')), parse("""[x-]"""))
+        assertEquals(SetNotationSymbol(symbols('-', 'x'), negated = true), parse("""[^-x]"""))
+        assertEquals(SetNotationSymbol(symbols('-', 'x'), negated = true), parse("""[^x-]"""))
     }
 
     @Test
     fun setNotationMetacharacterThatDoNotRequireEscaping() {
-        assertEquals(symbol('x', '+'), parse("""[x+]"""))
-        assertEquals(symbol('x', '*'), parse("""[x*]"""))
-        assertEquals(symbol('x', '?'), parse("""[x?]"""))
-        assertEquals(symbol('x', '.'), parse("""[x.]"""))
-        assertEquals(symbol('x', ' '), parse("""[x ]"""))
-        assertEquals(symbol('x', 'y', '|'), parse("""[x|y]"""))
-        assertEquals(symbol('x', '(', ')'), parse("""[(x)]"""))
-        assertEquals(symbol('x', '{', '}', '1', '2', ','), parse("""[x{1,2}]"""))
+        assertEquals(SetNotationSymbol(symbols('x', '+')), parse("""[x+]"""))
+        assertEquals(SetNotationSymbol(symbols('x', '*')), parse("""[x*]"""))
+        assertEquals(SetNotationSymbol(symbols('x', '?')), parse("""[x?]"""))
+        assertEquals(SetNotationSymbol(symbols('x', '.')), parse("""[x.]"""))
+        assertEquals(SetNotationSymbol(symbols('x', ' ')), parse("""[x ]"""))
+        assertEquals(SetNotationSymbol(symbols('x', 'y', '|')), parse("""[x|y]"""))
+        assertEquals(SetNotationSymbol(symbols('x', '(', ')')), parse("""[(x)]"""))
+        assertEquals(SetNotationSymbol(symbols('x', '{', '}', '1', '2', ',')), parse("""[x{1,2}]"""))
     }
 
     @Test
     fun setNotationSpecialCharacterEscaping() {
-        assertEquals(symbol('a', 'b', 'c', '\\', '0', '1', '2'), parse("""[abc\\012]"""))
-        assertEquals(symbol('a', 'b', 'c', ']', '0', '1', '2'), parse("""[abc\]012]"""))
-        assertEquals(symbol('a', 'b', 'c', '^', '0', '1', '2'), parse("""[abc\^012]"""))
-        assertEquals(symbol('a', 'b', 'c', '^', '0', '1', '2'), parse("""[\^abc012]"""))
-        assertEquals(symbol('a', 'b', 'c', '-', 'e', 'f', 'g'), parse("""[abc\-efg]"""))
+        assertEquals(SetNotationSymbol(symbols('a', 'b', 'c', '\\', '0', '1', '2')), parse("""[abc\\012]"""))
+        assertEquals(SetNotationSymbol(symbols('a', 'b', 'c', ']', '0', '1', '2')), parse("""[abc\]012]"""))
+        assertEquals(SetNotationSymbol(symbols('a', 'b', 'c', '^', '0', '1', '2')), parse("""[abc\^012]"""))
+        assertEquals(SetNotationSymbol(symbols('a', 'b', 'c', '^', '0', '1', '2')), parse("""[\^abc012]"""))
+        assertEquals(SetNotationSymbol(symbols('a', 'b', 'c', '-', 'e', 'f', 'g')), parse("""[abc\-efg]"""))
     }
 
     @Test
     fun setNotationCaretInTheMiddleDoesNotCountedAsMetacharacter() {
-        assertEquals(symbol('a', 'b', 'c', '^', '0', '1', '2'), parse("""[abc^012]"""))
+        assertEquals(SetNotationSymbol(symbols('a', 'b', 'c', '^', '0', '1', '2')), parse("""[abc^012]"""))
     }
 
     @Test
     fun setNotationNegation() {
-        assertEquals(Symbol(alphabet - setOf('a', 'b', 'd')), parse("""[^abd]"""))
+        assertEquals(SetNotationSymbol(symbols('a', 'b', 'd'), negated = true), parse("""[^abd]"""))
     }
 
     @Test
     fun shorthandCharacterClassesDigits() {
-        val expected = Symbol(setOf('0', '1', '2', '3', '4', '5', '6', '7', '8', '9'))
-        assertEquals(expected, parse("""\d"""))
-        assertEquals(expected, parse("""[\d]"""))
+        assertEquals(DigitSymbol, parse("""\d"""))
+        assertEquals(SetNotationSymbol(setOf(DigitSymbol)), parse("""[\d]"""))
     }
 
     @Test
     fun shorthandCharacterClassesWordCharacters() {
-        val expected = Symbol(('A'..'Z').toSet() + ('a'..'z').toSet() + ('0'..'9').toSet() + '_')
-        assertEquals(expected, parse("""\w"""))
-        assertEquals(expected, parse("""[\w]"""))
+        assertEquals(WordSymbol, parse("""\w"""))
+        assertEquals(SetNotationSymbol(setOf(WordSymbol)), parse("""[\w]"""))
     }
 
     @Test
     fun shorthandCharacterClassesWhitespaceCharacters() {
-        val expected = Symbol(whitespaces)
-        assertEquals(expected, parse("""\s"""))
-        assertEquals(expected, parse("""[\s]"""))
+        assertEquals(WhitespaceSymbol, parse("""\s"""))
+        assertEquals(SetNotationSymbol(setOf(WhitespaceSymbol)), parse("""[\s]"""))
     }
 
     @Test
     fun shorthandCharacterClassesNonDigits() {
-        val expected = Symbol(alphabet - setOf('0', '1', '2', '3', '4', '5', '6', '7', '8', '9'))
-        assertEquals(expected, parse("""\D"""))
-        assertEquals(expected, parse("""[\D]"""))
+        assertEquals(NonDigitSymbol, parse("""\D"""))
+        assertEquals(SetNotationSymbol(setOf(NonDigitSymbol)), parse("""[\D]"""))
     }
 
     @Test
     fun shorthandCharacterClassesNonWordCharacters() {
-        val expected = alphabet - (('A'..'Z').toSet() + ('a'..'z').toSet() + ('0'..'9').toSet() + '_')
-        assertEquals(Symbol(expected), parse("""\W"""))
-        assertEquals(Symbol(expected), parse("""[\W]"""))
+        assertEquals(NonWordSymbol, parse("""\W"""))
+        assertEquals(SetNotationSymbol(setOf(NonWordSymbol)), parse("""[\W]"""))
     }
 
     @Test
     fun shorthandCharacterClassesNonWhitespaceCharacters() {
-        val expected = Symbol(alphabet - whitespaces)
-        assertEquals(expected, parse("""\S"""))
-        assertEquals(expected, parse("""[\S]"""))
+        assertEquals(NonWhitespaceSymbol, parse("""\S"""))
+        assertEquals(SetNotationSymbol(setOf(NonWhitespaceSymbol)), parse("""[\S]"""))
     }
 
     @Test
     fun hexadecimalCharacters() {
         assertEquals(symbol('1'), parse("""\x31"""))
-        assertEquals(symbol('1', '3', '5'), parse("""[\x31\x33\x35]"""))
+        assertEquals(SetNotationSymbol(symbols('1', '3', '5')), parse("""[\x31\x33\x35]"""))
     }
 
     @Test
     fun unicodeCharacters() {
         assertEquals(symbol('1'), parse("""\x0031"""))
-        assertEquals(symbol('1', '3', '5'), parse("""[\x0031\x0033\x0035]"""))
-        assertEquals(symbol('1', '3', '5', 'a', 'b'), parse("""[\x0031\x0033ab\x0035]"""))
+        assertEquals(SetNotationSymbol(symbols('1', '3', '5')), parse("""[\x0031\x0033\x0035]"""))
+        assertEquals(SetNotationSymbol(symbols('1', '3', '5', 'a', 'b')), parse("""[\x0031\x0033ab\x0035]"""))
     }
 
     @Test
@@ -498,7 +478,7 @@ class ParserTest {
     @Test
     fun freeSpaceMode() {
         assertEquals(concatenation(symbol('a'), symbol('b'), symbol('c')), parse("""a${System.lineSeparator()}b c"""))
-        assertEquals(symbol('a', 'b', 'c', ' '), parse("""[a b c]"""))
+        assertEquals(SetNotationSymbol(symbols('a', 'b', 'c', ' ')), parse("""[a b c]"""))
         assertEquals(concatenation(symbol(' '), symbol('d')), parse("""\ d"""))
     }
 }
