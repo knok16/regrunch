@@ -279,4 +279,8 @@ object Fixtures {
         transition(e, final, 'c')
         transition(final, a, 'c')
     }
+
+    val singletonEmptyString = dfa(setOf('a', 'b', 'c')) {
+        markAsFinal(startState)
+    }
 }

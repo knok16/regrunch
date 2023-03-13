@@ -1,6 +1,7 @@
 package dfa
 
 import dfa.Fixtures.oddZeroes
+import dfa.Fixtures.singletonEmptyString
 import dfa.Fixtures.taylor
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -80,6 +81,14 @@ class AllStringsAlphabeticallyTest {
         assertEquals(
             "0".repeat(2001),
             oddZeroes.allStringsAlphabetically().drop(1000).first()
+        )
+    }
+
+    @Test
+    fun singletonEmptyString() {
+        assertEquals(
+            listOf(""),
+            singletonEmptyString.allStringsAlphabetically().toList()
         )
     }
 }
