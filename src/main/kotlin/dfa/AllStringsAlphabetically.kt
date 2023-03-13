@@ -17,6 +17,8 @@ fun <S> DFA<Char, S>.allStringsAlphabetically(): Sequence<String> = sequence {
 
     callstack.push(getIteratorFor(startState))
 
+    if (startState in finalStates) yield("")
+
     while (callstack.isNotEmpty()) {
         val stackFrame = callstack.peek()
         if (!stackFrame.hasNext()) {
