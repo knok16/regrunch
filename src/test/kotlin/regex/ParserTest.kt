@@ -422,14 +422,46 @@ class ParserTest {
     @Test
     fun setNotationRanges() {
         assertEquals(SetNotationSymbol(symbols('3', '4', '5', '6', '7', 'b', 'c', 'd', '9')), parse("""[3-7b-d9]"""))
+        assertEquals(SetNotationSymbol(symbols('a', ' ', 'b')), parse("""[a\x20-\x20b]"""))
+        assertEquals(SetNotationSymbol(symbols('ბ', 'გ', 'დ')), parse("""[\u10D1-\u10D3]"""))
+
+        assertEquals(SetNotationSymbol(symbols('2', '3', '4')), parse("""[\x32-4]"""))
+        assertEquals(SetNotationSymbol(symbols('3', '4', '5')), parse("""[3-\x35]"""))
+
+        assertEquals(SetNotationSymbol(symbols('4', '5', '6')), parse("""[\u0034-6]"""))
+        assertEquals(SetNotationSymbol(symbols('5', '6', '7')), parse("""[5-\u0037]"""))
+
+        assertEquals(SetNotationSymbol(symbols('-', '.', '/', '0')), parse("""[\u002D-\x30]"""))
+        assertEquals(SetNotationSymbol(symbols('-', '.', '/', '0')), parse("""[\x2D-\u0030]"""))
+
+        assertEquals(SetNotationSymbol(symbols(0x07.toChar(), 0x08.toChar(), '\t')), parse("""[\a-\t]"""))
+        assertEquals(SetNotationSymbol(symbols(0x07.toChar(), 0x08.toChar(), '\t')), parse("""[\cG-\ci]"""))
     }
 
     @Test
     fun setNotationRangesExceptions() {
         assertEquals(SetNotationSymbol(symbols('-', 'x')), parse("""[-x]"""))
-        assertEquals(SetNotationSymbol(symbols('-', 'x')), parse("""[x-]"""))
+        assertEquals(SetNotationSymbol(symbols('x', '-')), parse("""[x-]"""))
+
+        assertEquals(SetNotationSymbol(symbols('-', '\t')), parse("""[-\t]"""))
+        assertEquals(SetNotationSymbol(symbols('\t', '-')), parse("""[\t-]"""))
+
+        assertEquals(SetNotationSymbol(setOf(symbol('-'), DigitSymbol)), parse("""[-\d]"""))
+        assertEquals(SetNotationSymbol(setOf(DigitSymbol, symbol('-'))), parse("""[\d-]"""))
+
         assertEquals(SetNotationSymbol(symbols('-', 'x'), negated = true), parse("""[^-x]"""))
-        assertEquals(SetNotationSymbol(symbols('-', 'x'), negated = true), parse("""[^x-]"""))
+        assertEquals(SetNotationSymbol(symbols('x', '-'), negated = true), parse("""[^x-]"""))
+
+        assertEquals(SetNotationSymbol(symbols('-', '\t'), negated = true), parse("""[^-\t]"""))
+        assertEquals(SetNotationSymbol(symbols('\t', '-'), negated = true), parse("""[^\t-]"""))
+
+        assertEquals(SetNotationSymbol(setOf(symbol('-'), DigitSymbol), negated = true), parse("""[^-\d]"""))
+        assertEquals(SetNotationSymbol(setOf(DigitSymbol, symbol('-')), negated = true), parse("""[^\d-]"""))
+
+        // TODO decide should parser tolerate this or throw exception
+        assertEquals(SetNotationSymbol(setOf(DigitSymbol, symbol('-'), symbol('7'))), parse("""[\d-7]"""))
+        assertEquals(SetNotationSymbol(setOf(symbol('3'), symbol('-'), DigitSymbol)), parse("""[3-\d]"""))
+        assertEquals(SetNotationSymbol(setOf(DigitSymbol, symbol('-'), DigitSymbol)), parse("""[\d-\d]"""))
     }
 
     @Test

@@ -67,25 +67,33 @@ internal fun parseSetNotation(reader: Reader): SetNotationSymbol {
     val negate = reader.peek() == '^'
     if (negate) reader.next()
     while (true) {
-        val char = reader.next() ?: throw ParseException("Unbalanced square bracket", initialCursor)
-        when (char) {
+        val symbol = when (val char = reader.next() ?: throw ParseException("Unbalanced square bracket", initialCursor)) {
             ']' -> break
-            '\\' -> symbols.add(parseEscapedCharacter(reader))
-            else -> if (reader.peek() == '-') {
-                reader.next() // pop '-' character
-                val from = char
-                val to = reader.next() ?: throw ParseException("Unbalanced square bracket", initialCursor)
-                if (to == ']') {
-                    symbols.add(ExactSymbol(char))
+            '\\' -> parseEscapedCharacter(reader)
+            else -> ExactSymbol(char)
+        }
+
+        if (reader.peek() == '-') {
+            reader.next() // pop '-' character
+            val to = when (val char = reader.next() ?: throw ParseException("Unbalanced square bracket", initialCursor)) {
+                ']' -> {
+                    symbols.add(symbol)
                     symbols.add(ExactSymbol('-'))
                     break
-                } else {
-                    // TODO add validation
-                    (from..to).map(::ExactSymbol).forEach(symbols::add)
                 }
-            } else {
-                symbols.add(ExactSymbol(char))
+
+                '\\' -> parseEscapedCharacter(reader)
+                else -> ExactSymbol(char)
             }
+            if (symbol is ExactSymbol && to is ExactSymbol) {
+                (symbol.value..to.value).map(::ExactSymbol).forEach(symbols::add)
+            } else {
+                symbols.add(symbol)
+                symbols.add(ExactSymbol('-'))
+                symbols.add(to)
+            }
+        } else {
+            symbols.add(symbol)
         }
     }
 
