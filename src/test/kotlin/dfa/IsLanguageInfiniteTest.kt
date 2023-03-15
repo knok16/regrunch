@@ -18,84 +18,84 @@ import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-class IsLanguageEmptyTest {
+class IsLanguageInfiniteTest {
     @Test
     fun taylor() {
-        assertFalse(isLanguageEmpty(taylor))
+        assertFalse(isLanguageInfinite(taylor))
     }
 
     @Test
     fun evenOnes() {
-        assertFalse(isLanguageEmpty(evenOnes))
+        assertTrue(isLanguageInfinite(evenOnes))
     }
 
     @Test
     fun oddZeroes() {
-        assertFalse(isLanguageEmpty(oddZeroes))
+        assertTrue(isLanguageInfinite(oddZeroes))
     }
 
     @Test
     fun divisibilityBy() {
-        assertFalse(isLanguageEmpty(divisibilityBy(7)))
+        assertTrue(isLanguageInfinite(divisibilityBy(7)))
     }
 
     @Test
     fun noConsecutiveOnes() {
-        assertFalse(isLanguageEmpty(noConsecutiveOnes))
+        assertTrue(isLanguageInfinite(noConsecutiveOnes))
     }
 
     @Test
     fun wordEndsInIng() {
-        assertFalse(isLanguageEmpty(wordEndsInIng))
+        assertTrue(isLanguageInfinite(wordEndsInIng))
     }
 
     @Test
     fun no3Consecutive0() {
-        assertFalse(isLanguageEmpty(no3Consecutive0))
+        assertTrue(isLanguageInfinite(no3Consecutive0))
     }
 
     @Test
     fun no3Consecutive012() {
-        assertFalse(isLanguageEmpty(no3Consecutive012))
+        assertTrue(isLanguageInfinite(no3Consecutive012))
     }
 
     @Test
     fun deadTentacle() {
-        assertFalse(isLanguageEmpty(deadTentacle))
+        assertTrue(isLanguageInfinite(deadTentacle))
     }
 
     @Test
     fun deadTentacle2() {
-        assertFalse(isLanguageEmpty(deadTentacle2))
+        assertFalse(isLanguageInfinite(deadTentacle2))
     }
 
     @Test
     fun deadBlossom() {
-        assertFalse(isLanguageEmpty(deadBlossom))
+        assertTrue(isLanguageInfinite(deadBlossom))
     }
 
     @Test
     fun deadBlossom2() {
-        assertFalse(isLanguageEmpty(deadBlossom2))
+        assertFalse(isLanguageInfinite(deadBlossom2))
     }
 
     @Test
     fun anyStringDFA() {
-        assertFalse(isLanguageEmpty(anyStringDFA(setOf('a', '2'))))
+        assertTrue(isLanguageInfinite(anyStringDFA(setOf('a', '2'))))
     }
 
     @Test
     fun emptyDFA() {
-        assertTrue(isLanguageEmpty(emptyDFA(setOf('a', '2'))))
+        assertFalse(isLanguageInfinite(emptyDFA(setOf('a', '2'))))
     }
 
     @Test
     fun finalStateIsNotReachableFromStart() {
-        assertTrue(isLanguageEmpty(finalStateIsNotReachableFromStart))
+        assertFalse(isLanguageInfinite(finalStateIsNotReachableFromStart))
     }
 
     @Test
     fun singletonEmptyString() {
-        assertFalse(isLanguageEmpty(singletonEmptyString))
+        assertFalse(isLanguageInfinite(singletonEmptyString))
     }
 }
