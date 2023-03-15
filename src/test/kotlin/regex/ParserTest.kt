@@ -37,6 +37,11 @@ class ParserTest {
                 concatenation(symbol('a'), symbol((char - 'A' + 1).toChar()), symbol('b')), parse("""a\c${char}b""")
             )
         }
+        for (char in 'a'..'z') {
+            assertEquals(
+                concatenation(symbol('a'), symbol((char - 'a' + 1).toChar()), symbol('b')), parse("""a\c${char}b""")
+            )
+        }
     }
 
     @Test
@@ -53,7 +58,7 @@ class ParserTest {
         assertFailsWith<ParseException> {
             parse("""\c8""")
         }.let {
-            assertEquals(ParseException("Unexpected control character '8' (only 'A'-'Z' allowed)", 2), it)
+            assertEquals(ParseException("Unexpected control character '8' (only 'A'-'Z' or 'a'-'z' allowed)", 2), it)
         }
     }
 

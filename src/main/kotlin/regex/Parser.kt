@@ -56,11 +56,15 @@ internal fun parseEscapedCharacter(reader: Reader): Symbol =
 
         'c' -> {
             val control = reader.next() ?: throw ParseException("No control character", reader.prevCursor())
-            if (control in 'A'..'Z') ExactSymbol((control - 'A' + 1).toChar())
-            else throw ParseException(
-                "Unexpected control character '$control' (only 'A'-'Z' allowed)",
-                reader.prevCursor()
-            )
+            val code = when (control) {
+                in 'A'..'Z' -> (control - 'A' + 1)
+                in 'a'..'z' -> (control - 'a' + 1)
+                else -> throw ParseException(
+                    "Unexpected control character '$control' (only 'A'-'Z' or 'a'-'z' allowed)",
+                    reader.prevCursor()
+                )
+            }
+            ExactSymbol(code.toChar())
         }
 
         else -> ExactSymbol(char)
