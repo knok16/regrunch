@@ -244,6 +244,11 @@ class ParserTest {
     @Test
     fun repeatOperatorTooManyIntegers() {
         assertFailsWith<ParseException> {
+            parse("""abc{1,2,3}""")
+        }.let {
+            assertEquals(ParseException("Unexpected number of parts in repeat operator", 3, 9), it)
+        }
+        assertFailsWith<ParseException> {
             parse("""abc{1,22,3}""")
         }.let {
             assertEquals(ParseException("Unexpected number of parts in repeat operator", 3, 10), it)
@@ -253,9 +258,50 @@ class ParserTest {
     @Test
     fun repeatOperatorNotAnInteger() {
         assertFailsWith<ParseException> {
+            parse("""abc{abc,1}""")
+        }.let {
+            assertEquals(ParseException("Expected positive integers in repeat notation, but got 'abc'", 6, 8), it)
+        }
+        assertFailsWith<ParseException> {
             parse("""abc{1,abc}""")
         }.let {
-            assertEquals(ParseException("Not an integer parameter of repeat operator", 6, 8), it)
+            assertEquals(ParseException("Expected positive integers in repeat notation, but got 'abc'", 6, 8), it)
+        }
+        assertFailsWith<ParseException> {
+            parse("""abc{-1,}""")
+        }.let {
+            assertEquals(ParseException("Expected positive integers in repeat notation, but got '-1'", 4, 5), it)
+        }
+        assertFailsWith<ParseException> {
+            parse("""abc{,-1}""")
+        }.let {
+            assertEquals(ParseException("Expected positive integers in repeat notation, but got '-1'", 4, 5), it)
+        }
+        assertFailsWith<ParseException> {
+            parse("""abc{1,2 3,4}""")
+        }.let {
+            assertEquals(ParseException("Expected positive integers in repeat notation, but got '2 3'", 4, 5), it)
+        }
+    }
+
+    @Test
+    fun repeatOperator0Repeats() {
+        assertEquals(Repeat(symbol('a'), 0, 0), parse("""a{0}"""))
+        assertEquals(Repeat(symbol('a'), 0, 0), parse("""a{0,0}"""))
+    }
+
+    @Test
+    fun repeatOperatorRangeValidation() {
+        assertFailsWith<ParseException> {
+            parse("""abc{3,2}""")
+        }.let {
+            assertEquals(
+                ParseException(
+                    "Min number of repeats should be less of equals than max number of repeats",
+                    3,
+                    7
+                ), it
+            )
         }
     }
 

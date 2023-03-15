@@ -103,14 +103,6 @@ internal fun parseRepeatNotation(reader: Reader): RepeatOperator {
     val ints = s.toString().split(',').map { it.trim() }.map { it.takeIf { it.isNotBlank() } }
         .map { it?.toInt() } // TODO add error handling
     val endingCursor = reader.prevCursor()
-    // TODO add validation:
-    // {}
-    // {-1,}
-    // {,-1}
-    // {0,0}
-    // {3,2}
-    // {1,2 3,4}
-    // {1,3,4}
     return when (ints.size) {
         0 -> RepeatOperator(0, null, initialCursor, endingCursor) // TODO is it legal?
         1 -> RepeatOperator(ints[0]!!, ints[0], initialCursor, endingCursor) // TODO think about !!
