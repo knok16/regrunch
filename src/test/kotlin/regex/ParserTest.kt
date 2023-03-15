@@ -456,15 +456,10 @@ class ParserTest {
 
     @Test
     fun hexadecimalCharacters() {
-        assertEquals(symbol('1'), parse("""\x31"""))
+        assertEquals(symbol('>'), parse("""\x3e"""))
+        assertEquals(symbol('/'), parse("""\x2F"""))
         assertEquals(SetNotationSymbol(symbols('1', '3', '5')), parse("""[\x31\x33\x35]"""))
-    }
-
-    @Test
-    fun unicodeCharacters() {
-        assertEquals(symbol('1'), parse("""\x0031"""))
-        assertEquals(SetNotationSymbol(symbols('1', '3', '5')), parse("""[\x0031\x0033\x0035]"""))
-        assertEquals(SetNotationSymbol(symbols('1', '3', '5', 'a', 'b')), parse("""[\x0031\x0033ab\x0035]"""))
+        assertEquals(SetNotationSymbol(symbols('>', ' ', '/')), parse("""[\x3e\x20\x2F]"""))
     }
 
     @Test
@@ -492,6 +487,64 @@ class ParserTest {
             parse("""abc\x1g""")
         }.let {
             assertEquals(ParseException("Expected hexadecimal digit ('0'-'9', 'A'-'Z, 'a'-'z') but got 'g'", 6), it)
+        }
+    }
+
+    @Test
+    fun unicodeCharacters() {
+        assertEquals(symbol('1'), parse("""\u0031"""))
+        assertEquals(SetNotationSymbol(symbols('1', '3', '5')), parse("""[\u0031\u0033\u0035]"""))
+        assertEquals(SetNotationSymbol(symbols('1', '3', '5', 'a', 'b')), parse("""[\u0031\u0033ab\u0035]"""))
+        assertEquals(symbol('დ'), parse("""\u10d3"""))
+        assertEquals(symbol('დ'), parse("""\u10D3"""))
+        assertEquals(SetNotationSymbol(symbols('დ', '1', '2', '3')), parse("""[\u10d3123]"""))
+    }
+
+    @Test
+    fun unicodeCharactersEndsAbruptly() {
+        assertFailsWith<ParseException> {
+            parse("""abc\u""")
+        }.let {
+            assertEquals(ParseException("""Expected hexadecimal digit but got end of input""", 5), it)
+        }
+        assertFailsWith<ParseException> {
+            parse("""abc\u0""")
+        }.let {
+            assertEquals(ParseException("""Expected hexadecimal digit but got end of input""", 6), it)
+        }
+        assertFailsWith<ParseException> {
+            parse("""abc\u00""")
+        }.let {
+            assertEquals(ParseException("""Expected hexadecimal digit but got end of input""", 7), it)
+        }
+        assertFailsWith<ParseException> {
+            parse("""abc\u002""")
+        }.let {
+            assertEquals(ParseException("""Expected hexadecimal digit but got end of input""", 8), it)
+        }
+    }
+
+    @Test
+    fun unicodeCharactersNotANumber() {
+        assertFailsWith<ParseException> {
+            parse("""abc\uNO""")
+        }.let {
+            assertEquals(ParseException("Expected hexadecimal digit ('0'-'9', 'A'-'Z, 'a'-'z') but got 'N'", 5), it)
+        }
+        assertFailsWith<ParseException> {
+            parse("""abc\u0NO""")
+        }.let {
+            assertEquals(ParseException("Expected hexadecimal digit ('0'-'9', 'A'-'Z, 'a'-'z') but got 'N'", 6), it)
+        }
+        assertFailsWith<ParseException> {
+            parse("""abc\u00NO""")
+        }.let {
+            assertEquals(ParseException("Expected hexadecimal digit ('0'-'9', 'A'-'Z, 'a'-'z') but got 'N'", 7), it)
+        }
+        assertFailsWith<ParseException> {
+            parse("""abc\u002NO""")
+        }.let {
+            assertEquals(ParseException("Expected hexadecimal digit ('0'-'9', 'A'-'Z, 'a'-'z') but got 'N'", 8), it)
         }
     }
 
