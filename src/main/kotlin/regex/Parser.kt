@@ -15,6 +15,17 @@ internal class Reader(private val str: String) {
     fun prevCursor(): Int = i - 1 // TODO ?
 }
 
+internal fun Reader.readHexadecimal(): Int =
+    when (val char = next() ?: throw ParseException("Expected hexadecimal digit but got end of input", cursor())) {
+        in '0'..'9' -> char - '0'
+        in 'A'..'F' -> char - 'A' + 10
+        in 'a'..'f' -> char - 'a' + 10
+        else -> throw ParseException(
+            "Expected hexadecimal digit ('0'-'9', 'A'-'Z, 'a'-'z') but got '$char'",
+            prevCursor()
+        )
+    }
+
 internal fun parseEscapedCharacter(reader: Reader): Symbol =
     when (val char = reader.next()) {
         null -> throw ParseException("No character to escape", reader.prevCursor())
@@ -31,29 +42,7 @@ internal fun parseEscapedCharacter(reader: Reader): Symbol =
         'a' -> ExactSymbol(0x07.toChar())
         'e' -> ExactSymbol(0x1B.toChar())
         'f' -> ExactSymbol(0x0C.toChar())
-        'x' -> {
-            var digit = reader.peek() ?: throw ParseException(
-                """Expected a number after \x, but get end of string""",
-                reader.prevCursor()
-            )
-
-            fun isHexadecimal(char: Char?): Boolean = char in '0'..'9' || char in 'A'..'F' || char in 'a'..'f'
-            if (!isHexadecimal(digit)) throw ParseException("Not a hexadecimal number", reader.cursor())
-
-            var code = 0
-            while (isHexadecimal(digit)) {
-                code = code * 0x10 + when (digit) {
-                    in '0'..'9' -> digit - '0'
-                    in 'A'..'F' -> digit - 'A' + 10
-                    in 'a'..'f' -> digit - 'a' + 10
-                    else -> throw RuntimeException("Unreachable code, unexpected to get non-hexadecimal number")
-                }
-                reader.next()
-                digit = reader.peek() ?: break
-            }
-            ExactSymbol(code.toChar())
-        }
-
+        'x' -> ExactSymbol((reader.readHexadecimal() * 0x10 + reader.readHexadecimal()).toChar())
         'c' -> {
             val control = reader.next() ?: throw ParseException("No control character", reader.prevCursor())
             val code = when (control) {

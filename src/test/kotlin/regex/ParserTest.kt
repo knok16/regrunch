@@ -8,6 +8,7 @@ private fun symbol(symbol: Char) = ExactSymbol(symbol)
 private fun symbols(vararg symbols: Char) = symbols.map { ExactSymbol(it) }.toSet()
 private fun concatenation(vararg parts: RegexPart) = Concatenation(parts.toList())
 
+// TODO rethink indexes in errors when string ends abruptly
 class ParserTest {
     @Test
     fun simpleParse() {
@@ -471,7 +472,12 @@ class ParserTest {
         assertFailsWith<ParseException> {
             parse("""abc\x""")
         }.let {
-            assertEquals(ParseException("""Expected a number after \x, but get end of string""", 4), it)
+            assertEquals(ParseException("""Expected hexadecimal digit but got end of input""", 5), it)
+        }
+        assertFailsWith<ParseException> {
+            parse("""abc\x1""")
+        }.let {
+            assertEquals(ParseException("""Expected hexadecimal digit but got end of input""", 6), it)
         }
     }
 
@@ -480,7 +486,12 @@ class ParserTest {
         assertFailsWith<ParseException> {
             parse("""abc\xNO""")
         }.let {
-            assertEquals(ParseException("Not a hexadecimal number", 5), it)
+            assertEquals(ParseException("Expected hexadecimal digit ('0'-'9', 'A'-'Z, 'a'-'z') but got 'N'", 5), it)
+        }
+        assertFailsWith<ParseException> {
+            parse("""abc\x1g""")
+        }.let {
+            assertEquals(ParseException("Expected hexadecimal digit ('0'-'9', 'A'-'Z, 'a'-'z') but got 'g'", 6), it)
         }
     }
 
