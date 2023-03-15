@@ -40,6 +40,7 @@ internal fun parseEscapedCharacter(reader: Reader): Symbol =
         'n' -> ExactSymbol('\n')
         'v' -> ExactSymbol(0x0B.toChar())
         'a' -> ExactSymbol(0x07.toChar())
+        'b' -> ExactSymbol(0x10.toChar())
         'e' -> ExactSymbol(0x1B.toChar())
         'f' -> ExactSymbol(0x0C.toChar())
         'x' -> ExactSymbol((reader.readHexadecimal() * 0x10 + reader.readHexadecimal()).toChar())
