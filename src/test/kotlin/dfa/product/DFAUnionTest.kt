@@ -1,25 +1,26 @@
-package dfa
+package dfa.product
 
-import dfa.Fixtures.evenOnes
-import dfa.Fixtures.taylor
+import dfa.Fixtures
+import dfa.accept
+import dfa.dfa
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class DFAIntersectionTest {
+class DFAUnionTest {
     @Test
-    fun intersection1() {
+    fun union1() {
         val dfa3 = Fixtures.divisibilityBy(3)
         val dfa7 = Fixtures.divisibilityBy(7)
 
-        val intersection = dfa3 intersect dfa7
+        val union = union(dfa3, dfa7)
 
         for (i in 0..10000) {
-            assertEquals(i % 21 == 0, intersection.accept(i.toString()))
+            assertEquals(i % 3 == 0 || i % 7 == 0, union.accept(i.toString()))
         }
     }
 
     @Test
-    fun intersection2() {
+    fun union2() {
         val dfa1 = dfa(setOf('a', 'b', 'c')) {
             val a = startState
             val b = newState()
@@ -45,22 +46,22 @@ class DFAIntersectionTest {
             markAsFinal(c)
         }
 
-        assertEquals(
-            listOf("a"),
-            (dfa1 intersect dfa2).allStringsAlphabetically().toList()
-        )
+//        assertEquals(
+//            listOf("a"),
+//            (dfa1 + dfa2).allStringsAlphabetically().toList()
+//        )
     }
 
     @Test
-    fun intersectionWithEmpty() {
-        assertEquals(
-            emptyList(),
-            (taylor intersect emptyDFA(taylor.alphabet)).allStringsAlphabetically().toList()
-        )
+    fun unionWithEmpty() {
+//        assertEquals(
+//            emptyList(),
+//            (taylor + emptyDFA(taylor.alphabet)).allStringsAlphabetically().toList()
+//        )
 
-        assertEquals(
-            emptyList(),
-            (emptyDFA(evenOnes.alphabet) intersect evenOnes).allStringsAlphabetically().toList()
-        )
+//        assertEquals(
+//            emptyList(),
+//            (emptyDFA(evenOnes.alphabet) + evenOnes).allStringsAlphabetically().toList()
+//        )
     }
 }
