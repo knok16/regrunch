@@ -27,9 +27,20 @@ class ParserTest {
         assertEquals(concatenation(symbol('a'), symbol('\n'), symbol('b')), parse("""a\nb"""))
         assertEquals(concatenation(symbol('a'), symbol(0x0B.toChar()), symbol('b')), parse("""a\vb"""))
         assertEquals(concatenation(symbol('a'), symbol(0x07.toChar()), symbol('b')), parse("""a\ab"""))
-        assertEquals(concatenation(symbol('a'), symbol(0x10.toChar()), symbol('b')), parse("""a\bb"""))
         assertEquals(concatenation(symbol('a'), symbol(0x1B.toChar()), symbol('b')), parse("""a\eb"""))
         assertEquals(concatenation(symbol('a'), symbol(0x0C.toChar()), symbol('b')), parse("""a\fb"""))
+    }
+
+    @Test
+    fun nonPrintableCharactersInSetNotation() {
+        assertEquals(SetNotationSymbol(symbols('a', '\t', 'b')), parse("""[a\tb]"""))
+        assertEquals(SetNotationSymbol(symbols('a', '\r', 'b')), parse("""[a\rb]"""))
+        assertEquals(SetNotationSymbol(symbols('a', '\n', 'b')), parse("""[a\nb]"""))
+        assertEquals(SetNotationSymbol(symbols('a', 0x0B.toChar(), 'b')), parse("""[a\vb]"""))
+        assertEquals(SetNotationSymbol(symbols('a', 0x07.toChar(), 'b')), parse("""[a\ab]"""))
+        assertEquals(SetNotationSymbol(symbols('a', 0x10.toChar(), 'b')), parse("""[a\bb]"""))
+        assertEquals(SetNotationSymbol(symbols('a', 0x1B.toChar(), 'b')), parse("""[a\eb]"""))
+        assertEquals(SetNotationSymbol(symbols('a', 0x0C.toChar(), 'b')), parse("""[a\fb]"""))
     }
 
     @Test
@@ -635,16 +646,64 @@ class ParserTest {
     }
 
     @Test
-    fun beginningOfLineSymbol() {
-        assertEquals(BeginningOfLine, parse("^"))
-        assertEquals(concatenation(BeginningOfLine, symbol('a'), symbol('b')), parse("^ab"))
-        assertEquals(concatenation(symbol('a'), BeginningOfLine, symbol('b')), parse("a^b"))
+    fun startOfLineAnchor() {
+        assertEquals(StartOfLine, parse("""^"""))
+        assertEquals(concatenation(StartOfLine, symbol('a'), symbol('b')), parse("""^ab"""))
+        assertEquals(concatenation(symbol('a'), StartOfLine, symbol('b')), parse("""a^b"""))
     }
 
     @Test
-    fun endOfLineSymbol() {
-        assertEquals(EndOfLine, parse("$"))
-        assertEquals(concatenation(symbol('a'), symbol('b'), EndOfLine), parse("ab$"))
+    fun endOfLineAnchor() {
+        assertEquals(EndOfLine, parse("""$"""))
+        assertEquals(concatenation(symbol('a'), symbol('b'), EndOfLine), parse("""ab$"""))
         assertEquals(concatenation(symbol('a'), EndOfLine, symbol('b')), parse("a\$b"))
+    }
+
+    @Test
+    fun startOfStringAnchor() {
+        assertEquals(StartOfString, parse("""\A"""))
+        assertEquals(concatenation(StartOfString, symbol('a'), symbol('b')), parse("""\Aab"""))
+        assertEquals(concatenation(symbol('a'), StartOfString, symbol('b')), parse("""a\Ab"""))
+        assertEquals(SetNotationSymbol(setOf(symbol('a'), StartOfString, symbol('b'))), parse("""[a\Ab]"""))
+    }
+
+    @Test
+    fun endOfStringAnchor() {
+        assertEquals(EndOfString, parse("""\Z"""))
+        assertEquals(concatenation(symbol('a'), symbol('b'), EndOfString), parse("""ab\Z"""))
+        assertEquals(concatenation(symbol('a'), EndOfString, symbol('b')), parse("""a\Zb"""))
+        assertEquals(SetNotationSymbol(setOf(symbol('a'), EndOfString, symbol('b'))), parse("""[a\Zb]"""))
+
+    }
+
+    @Test
+    fun endOfStringOnlyAnchor() {
+        assertEquals(EndOfStringOnly, parse("""\z"""))
+        assertEquals(concatenation(symbol('a'), symbol('b'), EndOfStringOnly), parse("""ab\z"""))
+        assertEquals(concatenation(symbol('a'), EndOfStringOnly, symbol('b')), parse("""a\zb"""))
+        assertEquals(SetNotationSymbol(setOf(symbol('a'), EndOfStringOnly, symbol('b'))), parse("""[a\zb]"""))
+    }
+
+    @Test
+    fun previousMatchAnchor() {
+        assertEquals(PreviousMatch, parse("""\G"""))
+        assertEquals(concatenation(symbol('a'), symbol('b'), PreviousMatch), parse("""ab\G"""))
+        assertEquals(concatenation(symbol('a'), PreviousMatch, symbol('b')), parse("""a\Gb"""))
+        assertEquals(SetNotationSymbol(setOf(symbol('a'), PreviousMatch, symbol('b'))), parse("""[a\Gb]"""))
+    }
+
+    @Test
+    fun wordBoundaryAnchor() {
+        assertEquals(WordBoundary, parse("""\b"""))
+        assertEquals(concatenation(symbol('a'), symbol('b'), WordBoundary), parse("""ab\b"""))
+        assertEquals(concatenation(symbol('a'), WordBoundary, symbol('b')), parse("""a\bb"""))
+    }
+
+    @Test
+    fun nonWordBoundaryAnchor() {
+        assertEquals(NonWordBoundary, parse("""\B"""))
+        assertEquals(concatenation(symbol('a'), symbol('b'), NonWordBoundary), parse("""ab\B"""))
+        assertEquals(concatenation(symbol('a'), NonWordBoundary, symbol('b')), parse("""a\Bb"""))
+        assertEquals(SetNotationSymbol(setOf(symbol('a'), NonWordBoundary, symbol('b'))), parse("""[a\Bb]"""))
     }
 }

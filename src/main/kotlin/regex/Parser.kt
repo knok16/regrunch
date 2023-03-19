@@ -26,7 +26,7 @@ internal fun Reader.readHexadecimal(): Int =
         )
     }
 
-internal fun parseEscapedCharacter(reader: Reader): Symbol =
+internal fun parseEscapedCharacter(reader: Reader, forSetNotation: Boolean): Symbol =
     when (val char = reader.next()) {
         null -> throw ParseException("No character to escape", reader.prevCursor())
         'd' -> DigitSymbol
@@ -40,9 +40,14 @@ internal fun parseEscapedCharacter(reader: Reader): Symbol =
         'n' -> ExactSymbol('\n')
         'v' -> ExactSymbol(0x0B.toChar())
         'a' -> ExactSymbol(0x07.toChar())
-        'b' -> ExactSymbol(0x10.toChar())
+        'b' -> if (forSetNotation) ExactSymbol(0x10.toChar()) else WordBoundary
         'e' -> ExactSymbol(0x1B.toChar())
         'f' -> ExactSymbol(0x0C.toChar())
+        'A' -> StartOfString
+        'Z' -> EndOfString
+        'z' -> EndOfStringOnly
+        'G' -> PreviousMatch
+        'B' -> NonWordBoundary
         'x' -> ExactSymbol((reader.readHexadecimal() * 0x10 + reader.readHexadecimal()).toChar())
         'u' -> ExactSymbol((1..4).map { reader.readHexadecimal() }.reduce { acc, digit -> acc * 0x10 + digit }.toChar())
         'c' -> {
@@ -69,7 +74,7 @@ internal fun parseSetNotation(reader: Reader): SetNotationSymbol {
     while (true) {
         val symbol = when (val char = reader.next() ?: throw ParseException("Unbalanced square bracket", initialCursor)) {
             ']' -> break
-            '\\' -> parseEscapedCharacter(reader)
+            '\\' -> parseEscapedCharacter(reader, true)
             else -> ExactSymbol(char)
         }
 
@@ -82,7 +87,7 @@ internal fun parseSetNotation(reader: Reader): SetNotationSymbol {
                     break
                 }
 
-                '\\' -> parseEscapedCharacter(reader)
+                '\\' -> parseEscapedCharacter(reader, true)
                 else -> ExactSymbol(char)
             }
             if (symbol is ExactSymbol && to is ExactSymbol) {
@@ -136,7 +141,7 @@ internal fun tokenize(str: String): List<Token> {
         val cursor = reader.cursor()
         val char = reader.next() ?: break
         val token = when (char) {
-            '\\' -> SymbolToken(parseEscapedCharacter(reader))
+            '\\' -> SymbolToken(parseEscapedCharacter(reader, false))
             '[' -> SymbolToken(parseSetNotation(reader))
             '|' -> UnionOperator(cursor)
             '*' -> RepeatOperator(0, null, cursor, cursor)
@@ -146,7 +151,7 @@ internal fun tokenize(str: String): List<Token> {
             '(' -> LeftBracket(cursor)
             ')' -> RightBracket(cursor)
             '.' -> SymbolToken(AnySymbol)
-            '^' -> SymbolToken(BeginningOfLine)
+            '^' -> SymbolToken(StartOfLine)
             '$' -> SymbolToken(EndOfLine)
             else -> if (char.isWhitespace()) continue else SymbolToken(ExactSymbol(char))
         }

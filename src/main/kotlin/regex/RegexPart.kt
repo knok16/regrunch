@@ -21,5 +21,14 @@ object NonWhitespaceSymbol : Symbol
 object WordSymbol : Symbol
 object NonWordSymbol : Symbol
 data class SetNotationSymbol(val symbols: Set<Symbol>, val negated: Boolean = false) : Symbol
-object BeginningOfLine : Symbol
-object EndOfLine : Symbol
+
+sealed interface Anchor : Symbol
+
+object StartOfLine : Anchor
+object EndOfLine : Anchor
+object StartOfString : Anchor
+object EndOfString : Anchor
+object EndOfStringOnly : Anchor
+object PreviousMatch : Anchor
+object WordBoundary : Anchor
+object NonWordBoundary : Anchor
