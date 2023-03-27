@@ -88,7 +88,7 @@ object Fixtures {
         markAsFinal(hasEndedIn1)
     }
 
-    val wordEndsInIng = dfa((0x20.toChar()..0x127.toChar()).toSet()) {
+    val wordEndsInIng = dfa((0x20.toChar()..0x7F.toChar()).toSet()) {
         val wordSymbols = ('a'..'z') + ('A'..'Z') + '-'
 
         val iSuffix = newState()
@@ -337,5 +337,29 @@ object Fixtures {
 
     val singletonEmptyString = dfa(setOf('a', 'b', 'c')) {
         markAsFinal(startState)
+    }
+
+    val infiniteNumberOfStringsAlphabeticallySmallerThatAny = dfa(setOf('a', 'b')) {
+        val final = newState()
+
+        transition(startState, startState, 'a')
+        transition(startState, final, 'b')
+
+        markAsFinal(final)
+    }
+
+    val integers = dfa(('0'..'9').toSet()) {
+        val zero = newState()
+        val final = newState()
+
+        transition(startState, zero, '0')
+        for (symbol in '1'..'9')
+            transition(startState, final, symbol)
+
+        for (symbol in '0'..'9')
+            transition(final, final, symbol)
+
+        markAsFinal(zero)
+        markAsFinal(final)
     }
 }

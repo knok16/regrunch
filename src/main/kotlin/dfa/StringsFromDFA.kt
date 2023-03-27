@@ -2,6 +2,7 @@ package dfa
 
 import State
 
+// TODO merge with allStringsAlphabetically?
 fun DFA<Char, State>.strings(upTo: Int? = null): List<String> {
     val result = ArrayList<String>()
 
