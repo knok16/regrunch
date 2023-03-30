@@ -43,3 +43,9 @@ class EpsilonNFABuilder<A>(
 
 fun <A> epsilonNFA(alphabet: Set<A>, buildFunction: EpsilonNFABuilder<A>.() -> Unit): EpsilonNFA<A, State> =
     EpsilonNFABuilder(alphabet).also { it.buildFunction() }.build()
+
+fun <A> EpsilonNFABuilder<A>.transition(from: State, to: State, on: A) =
+    transition(from, setOf(to), on)
+
+fun <A> EpsilonNFABuilder<A>.newFinalState(): State =
+    newState().also { markAsFinal(it) }

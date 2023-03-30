@@ -2,7 +2,7 @@ package epsilonnfa
 
 import State
 
-class EpsilonNFAImpl<A> internal constructor(
+data class EpsilonNFAImpl<A> internal constructor(
     override val alphabet: Set<A>,
     override val states: Set<State>,
     override val startState: State,
