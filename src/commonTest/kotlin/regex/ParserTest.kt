@@ -640,7 +640,7 @@ class ParserTest {
 
     @Test
     fun freeSpaceMode() {
-        assertEquals(concatenation(symbol('a'), symbol('b'), symbol('c')), parse("""a${System.lineSeparator()}b c"""))
+        assertEquals(concatenation(symbol('a'), symbol('b'), symbol('c')), parse("a\rb c"))
         assertEquals(SetNotationSymbol(symbols('a', 'b', 'c', ' ')), parse("""[a b c]"""))
         assertEquals(concatenation(symbol(' '), symbol('d')), parse("""\ d"""))
     }

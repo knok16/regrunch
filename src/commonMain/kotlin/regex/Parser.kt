@@ -1,6 +1,8 @@
 package regex
 
-import java.util.*
+import utils.Stack
+import utils.isEmpty
+import utils.isNotEmpty
 
 data class ParseException constructor(override val message: String, val fromIndex: Int, val toIndex: Int) :
     Exception(message) {

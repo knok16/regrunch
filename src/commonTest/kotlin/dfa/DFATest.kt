@@ -22,10 +22,12 @@ class DFATest {
         assertFalse(taylor.accept("tAyLoR77!tAyLoR77!"))
     }
 
+    private fun bitCount(i: Int): Int = if (i == 0) 0 else (i and 1) + bitCount(i shr 1)
+
     @Test
     fun evenOnes() {
         for (i in 0..10000) {
-            assertEquals((Integer.bitCount(i) and 1) == 0, evenOnes.accept(i.toString(2)))
+            assertEquals((bitCount(i) and 1) == 0, evenOnes.accept(i.toString(2)))
         }
     }
 

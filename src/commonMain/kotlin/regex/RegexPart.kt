@@ -1,5 +1,7 @@
 package regex
 
+import kotlin.jvm.JvmInline
+
 sealed interface RegexPart
 
 data class Concatenation(val parts: List<RegexPart>) : RegexPart

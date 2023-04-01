@@ -1,6 +1,7 @@
 package dfa
 
-import java.util.*
+import utils.Queue
+import utils.isNotEmpty
 
 /**
  * Returns sequence of strings accepted by Deterministic Finite Automaton
@@ -11,12 +12,12 @@ fun <S> DFA<Char, S>.allStrings(): Sequence<String> = sequence {
     val deadStates = deadStates()
     val alphabetSorted = alphabet.sorted()
 
-    val queue: Queue<Pair<S, String>> = LinkedList()
+    val queue = Queue<Pair<S, String>>()
 
     if (startState in finalStates) {
         yield("")
     }
-    queue.add(startState to "")
+    queue.offer(startState to "")
 
     while (queue.isNotEmpty()) {
         val (state, prefix) = queue.remove()

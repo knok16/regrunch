@@ -14,7 +14,6 @@ import dfa.Fixtures.oddZeroes
 import dfa.Fixtures.singletonEmptyString
 import dfa.Fixtures.taylor
 import dfa.Fixtures.wordEndsInIng
-import java.math.BigInteger
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -22,7 +21,7 @@ import kotlin.test.assertNull
 class LanguageSizeTest {
     @Test
     fun simple() {
-        assertEquals(BigInteger.valueOf(1), languageSize(dfa(setOf('0', '1')) {
+        assertEquals(1L, languageSize(dfa(setOf('0', '1')) {
             val finalState = newState()
 
             transition(startState, finalState, '0')
@@ -33,7 +32,7 @@ class LanguageSizeTest {
 
     @Test
     fun taylor() {
-        assertEquals(BigInteger.valueOf(2 * 2 * 2 * 2 * 2 * 2 * 10 * 10 * 10), languageSize(taylor))
+        assertEquals(2L * 2 * 2 * 2 * 2 * 2 * 10 * 10 * 10, languageSize(taylor))
     }
 
     @Test
@@ -78,7 +77,7 @@ class LanguageSizeTest {
 
     @Test
     fun deadTentacle2() {
-        assertEquals(BigInteger.valueOf(2), languageSize(deadTentacle2))
+        assertEquals(2L, languageSize(deadTentacle2))
     }
 
     @Test
@@ -88,7 +87,7 @@ class LanguageSizeTest {
 
     @Test
     fun deadBlossom2() {
-        assertEquals(BigInteger.valueOf(2), languageSize(deadBlossom2))
+        assertEquals(2L, languageSize(deadBlossom2))
     }
 
     @Test
@@ -98,15 +97,15 @@ class LanguageSizeTest {
 
     @Test
     fun emptyDFA() {
-        assertEquals(BigInteger.ZERO, languageSize(emptyDFA(setOf('a', '2'))))
+        assertEquals(0L, languageSize(emptyDFA(setOf('a', '2'))))
     }
 
     @Test
     fun finalStateIsNotReachableFromStart() {
-        assertEquals(BigInteger.ZERO, languageSize(finalStateIsNotReachableFromStart))
+        assertEquals(0L, languageSize(finalStateIsNotReachableFromStart))
     }
     @Test
     fun singletonEmptyString() {
-        assertEquals(BigInteger.ONE, languageSize(singletonEmptyString))
+        assertEquals(1L, languageSize(singletonEmptyString))
     }
 }

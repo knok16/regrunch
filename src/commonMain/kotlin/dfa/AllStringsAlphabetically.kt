@@ -1,6 +1,7 @@
 package dfa
 
-import java.util.*
+import utils.Stack
+import utils.isNotEmpty
 
 fun <S> DFA<Char, S>.allStringsAlphabetically(): Sequence<String> = sequence {
     val callstack = Stack<Iterator<Pair<Char, S>>>()
@@ -26,15 +27,15 @@ fun <S> DFA<Char, S>.allStringsAlphabetically(): Sequence<String> = sequence {
         } else {
             val (char, state) = stackFrame.next()
 
-            if (callstack.lastIndex >= prefix.size) {
+            if (callstack.size > prefix.size) {
                 val newArray = CharArray(prefix.size * 2)
-                System.arraycopy(prefix, 0, newArray, 0, prefix.size)
+//                System.arraycopy(prefix, 0, newArray, 0, prefix.size) TODO
                 prefix = newArray
             }
-            prefix[callstack.lastIndex] = char
+            prefix[callstack.size - 1] = char
 
             if (state in finalStates) {
-                yield(String(prefix, 0, callstack.size))
+                yield(prefix.concatToString(endIndex = callstack.size))
             }
 
             callstack.push(getIteratorFor(state))
