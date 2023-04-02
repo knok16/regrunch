@@ -28,9 +28,7 @@ fun <S> DFA<Char, S>.allStringsAlphabetically(): Sequence<String> = sequence {
             val (char, state) = stackFrame.next()
 
             if (callstack.size > prefix.size) {
-                val newArray = CharArray(prefix.size * 2)
-//                System.arraycopy(prefix, 0, newArray, 0, prefix.size) TODO
-                prefix = newArray
+                prefix = prefix.copyOf(prefix.size * 2)
             }
             prefix[callstack.size - 1] = char
 
