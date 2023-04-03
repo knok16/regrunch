@@ -40,7 +40,7 @@ class AnyStringDFATest {
                 "1110",
                 "1111"
             ),
-            anyStringDFA(alphabet = setOf('0', '1')).strings(4)
+            anyStringDFA(alphabet = setOf('0', '1')).allStringsAlphabetically(4).toList()
         )
     }
 }

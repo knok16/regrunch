@@ -1,6 +1,8 @@
 package e2e
 
-import dfa.allStrings
+import State
+import dfa.DFA
+import dfa.allStringsAlphabetically
 import epsilonnfa.toNFA
 import nfa.toDFA
 import regex.parse
@@ -11,24 +13,24 @@ import kotlin.test.assertEquals
 class E2ETest {
     private val asciiAlphabet = (0..127).map { it.toChar() }.toSet()
 
-    private fun allStringsFrom(pattern: String): Sequence<String> =
-        parse(pattern).toEpsilonNFA(asciiAlphabet).toNFA().toDFA().allStrings()
+    private fun dfa(pattern: String): DFA<Char, State> =
+        parse(pattern).toEpsilonNFA(asciiAlphabet).toNFA().toDFA()
 
     @Test
     fun smokeTest() {
         assertEquals(
-            (0..999).map { it.toString() },
-            allStringsFrom("""([1-9]\d{0,2})|0""").toList()
+            (0..999).map { it.toString() }.sorted().toList(),
+            dfa("""([1-9]\d{0,2})|0""").allStringsAlphabetically().toList()
         )
     }
 
     @Test
     fun all4DigitPinCodes() {
         val expected = (0..9999).map { it.toString().padStart(4, padChar = '0') }
-        assertEquals(expected, allStringsFrom("""[0-9]{4}""").toList())
-        assertEquals(expected, allStringsFrom("""[0123456789]{4}""").toList())
-        assertEquals(expected, allStringsFrom("""\d{4}""").toList())
-        assertEquals(expected, allStringsFrom("""(0|1|2|3|4|5|6|7|8|9){4}""").toList())
+        assertEquals(expected, dfa("""[0-9]{4}""").allStringsAlphabetically().toList())
+        assertEquals(expected, dfa("""[0123456789]{4}""").allStringsAlphabetically().toList())
+        assertEquals(expected, dfa("""\d{4}""").allStringsAlphabetically().toList())
+        assertEquals(expected, dfa("""(0|1|2|3|4|5|6|7|8|9){4}""").allStringsAlphabetically().toList())
     }
 
     @Test
@@ -36,7 +38,7 @@ class E2ETest {
         val n = 26 + 26 + 10
         assertEquals(
             n * n * n,
-            allStringsFrom("""\w{3}""").count()
+            dfa("""\w{3}""").allStringsAlphabetically().count()
         )
     }
 
@@ -45,17 +47,18 @@ class E2ETest {
         assertEquals(
             listOf(
                 "0.0.0.0",
-                "0.0.0.1",
-                "0.0.0.2",
-                "0.0.0.3",
-                "0.0.0.4",
-                "0.0.0.5",
-                "0.0.0.6",
-                "0.0.0.7",
-                "0.0.0.8",
-                "0.0.0.9"
+                "0.0.0.00",
+                "0.0.0.000",
+                "0.0.0.001",
+                "0.0.0.002",
+                "0.0.0.003",
+                "0.0.0.004",
+                "0.0.0.005",
+                "0.0.0.006",
+                "0.0.0.007"
             ),
-            allStringsFrom("""((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)""")
+            dfa("""((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)""")
+                .allStringsAlphabetically()
                 .take(10)
                 .toList()
         )
@@ -66,17 +69,18 @@ class E2ETest {
         assertEquals(
             listOf(
                 "0.0.0.0",
-                "0.0.0.1",
-                "0.0.0.2",
-                "0.0.0.3",
-                "0.0.0.4",
-                "0.0.0.5",
-                "0.0.0.6",
-                "0.0.0.7",
-                "0.0.0.8",
-                "0.0.0.9"
+                "0.0.0.00",
+                "0.0.0.000",
+                "0.0.0.001",
+                "0.0.0.002",
+                "0.0.0.003",
+                "0.0.0.004",
+                "0.0.0.005",
+                "0.0.0.006",
+                "0.0.0.007"
             ),
-            allStringsFrom("""(\d{1,3}\.){3}(\d{1,3})""")
+            dfa("""(\d{1,3}\.){3}(\d{1,3})""")
+                .allStringsAlphabetically()
                 .take(10)
                 .toList()
         )
@@ -88,36 +92,42 @@ class E2ETest {
             listOf(
                 "",
                 "a",
-                "b",
                 "aa",
-                "ab",
-                "bb",
                 "aaa",
-                "aab",
-                "abb",
-                "bbb",
                 "aaaa",
-                "aaab",
-                "aabb",
-                "abbb",
-                "bbbb",
                 "aaaaa",
-                "aaaab",
-                "aaabb",
-                "aabbb",
-                "abbbb",
-                "bbbbb",
                 "aaaaaa",
                 "aaaaab",
+                "aaaab",
                 "aaaabb",
+                "aaab",
+                "aaabb",
                 "aaabbb",
+                "aab",
+                "aabb",
+                "aabbb",
                 "aabbbb",
+                "ab",
+                "abb",
+                "abbb",
+                "abbbb",
                 "abbbbb",
+                "b",
+                "bb",
+                "bbb",
+                "bbbb",
+                "bbbbb",
                 "bbbbbb"
             ),
-            allStringsFrom("""a*b*""")
-                .takeWhile { it.length <= 6 }
-                .toList()
+            dfa("""a*b*""").allStringsAlphabetically(6).toList()
+        )
+    }
+
+    @Test
+    fun stringGenerationDoesNotGenerateStringInAdvance() {
+        assertEquals(
+            "blablabla",
+            dfa("""[a-z]{10,}|blablabla""").allStringsAlphabetically(9).first()
         )
     }
 }

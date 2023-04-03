@@ -40,3 +40,6 @@ fun <S> DFA<Char, S>.allStringsAlphabetically(): Sequence<String> = sequence {
         }
     }
 }
+
+fun <S> DFA<Char, S>.allStringsAlphabetically(maxLength: Int): Sequence<String> =
+    (this intersect anyStringOfLengthUpTo(alphabet, maxLength)).allStringsAlphabetically()
