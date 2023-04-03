@@ -1,7 +1,12 @@
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.PrintMessage
 import com.github.ajalt.clikt.parameters.arguments.argument
+import com.github.ajalt.clikt.parameters.groups.default
+import com.github.ajalt.clikt.parameters.groups.mutuallyExclusiveOptions
+import com.github.ajalt.clikt.parameters.groups.single
 import com.github.ajalt.clikt.parameters.options.option
+import com.github.ajalt.clikt.parameters.options.transformAll
+import com.github.ajalt.clikt.parameters.types.choice
 import com.github.ajalt.clikt.parameters.types.int
 import com.github.ajalt.clikt.parameters.types.restrictTo
 import dfa.allStringsAlphabetically
@@ -14,14 +19,31 @@ import regex.ParseException
 import regex.parse
 import regex.toEpsilonNFA
 
-private val asciiAlphabet = (0..127).map { it.toChar() }.toSet()
+private val asciiAlphabet = (0x01..0x7F).map { it.toChar() }.toSet()
+private val printableAsciiAlphabet = (0x20..0x7F).map { it.toChar() }.toSet()
 
+// TODO improve help strings, check grammar
 class Regrunch : CliktCommand("Generate strings from regex") {
     private val regex by argument(help = "Regex to generate strings")
+
     private val maxLength by option(
         "-m", "--max-length",
         help = "Limits length of strings generated from regex, required in case regex defines infinite amount of strings"
     ).int().restrictTo(min = 0)
+
+    private val alphabet by mutuallyExclusiveOptions(
+        option(
+            "--alphabet", "-a",
+            help = "Symbols set used for string generation"
+        ).choice(
+            "ascii" to asciiAlphabet,
+            "printable-ascii" to printableAsciiAlphabet
+        ),
+        option(
+            "--symbols", "-s",
+            help = "Symbols used for string generation"
+        ).transformAll { values -> values.flatMap { it.toList() }.toSet() }
+    ).single().default(printableAsciiAlphabet)
 
     override fun run() {
         val regex = try {
@@ -37,8 +59,8 @@ class Regrunch : CliktCommand("Generate strings from regex") {
             )
         }
 
-        val dfa = regex.toEpsilonNFA(asciiAlphabet).toNFA().toDFA().let { dfa ->
-            maxLength?.let { dfa intersect anyStringOfLengthUpTo(asciiAlphabet, it) } ?: dfa
+        val dfa = regex.toEpsilonNFA(alphabet).toNFA().toDFA().let { dfa ->
+            maxLength?.let { dfa intersect anyStringOfLengthUpTo(alphabet, it) } ?: dfa
         }
 
         if (isLanguageInfinite(dfa)) {

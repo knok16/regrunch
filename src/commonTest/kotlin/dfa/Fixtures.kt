@@ -3,7 +3,7 @@ package dfa
 import State
 
 object Fixtures {
-    val taylor = dfa((0x20.toChar()..0x127.toChar()).toSet()) {
+    val taylor = dfa((0x20.toChar()..0x7F.toChar()).toSet()) {
         val s = startState
         val states = IntArray(9) { newState() }
 
