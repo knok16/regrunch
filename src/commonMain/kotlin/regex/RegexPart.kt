@@ -6,7 +6,14 @@ sealed interface RegexPart
 
 data class Concatenation(val parts: List<RegexPart>) : RegexPart
 
-data class Repeat(val part: RegexPart, val min: Int, val max: Int?) : RegexPart
+// TODO rename to Quantifier?
+data class Repeat(val part: RegexPart, val min: Int, val max: Int?, val type: Type = Type.GREEDY) : RegexPart {
+    enum class Type {
+        GREEDY,
+        LAZY,
+        POSSESSIVE
+    }
+}
 
 data class Union(val parts: Set<RegexPart>) : RegexPart
 

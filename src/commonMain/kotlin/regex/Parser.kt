@@ -28,6 +28,20 @@ internal fun Reader.readHexadecimal(): Int =
         )
     }
 
+internal fun Reader.readRepeatType(): Repeat.Type = when (peek()) {
+    '?' -> {
+        next()
+        Repeat.Type.LAZY
+    }
+
+    '+' -> {
+        next()
+        Repeat.Type.POSSESSIVE
+    }
+
+    else -> Repeat.Type.GREEDY
+}
+
 internal fun parseEscapedCharacter(reader: Reader, forSetNotation: Boolean): Symbol =
     when (val char = reader.next()) {
         null -> throw ParseException("No character to escape", reader.prevCursor())
@@ -118,18 +132,27 @@ internal fun parseRepeatNotation(reader: Reader): RepeatOperator {
     val ints = s.toString().split(',').map { it.trim() }.map { it.takeIf { it.isNotBlank() } }
         .map { it?.toInt() } // TODO add error handling
     val endingCursor = reader.prevCursor()
-    return when (ints.size) {
-        0 -> RepeatOperator(0, null, initialCursor, endingCursor) // TODO is it legal?
-        1 -> RepeatOperator(ints[0]!!, ints[0], initialCursor, endingCursor) // TODO think about !!
-        2 -> RepeatOperator(ints[0] ?: 0, ints[1], initialCursor, endingCursor)
+    val (min, max) = when (ints.size) {
+        0 -> 0 to null // TODO is it legal?
+        1 -> ints[0]!! to ints[0] // TODO think about !!
+        2 -> (ints[0] ?: 0) to ints[1]
         else -> throw ParseException("Unexpected number of parts in repeat operator", initialCursor, endingCursor)
     }
+
+    return RepeatOperator(min, max, reader.readRepeatType(), initialCursor, endingCursor)
 }
 
 internal sealed interface Token
 internal data class UnionOperator(val at: Int) : Token
 internal data class ConcatenationOperator(val at: Int) : Token // TODO what to do here?
-internal data class RepeatOperator(val min: Int, val max: Int?, val fromIndex: Int, val toIndex: Int) : Token
+internal data class RepeatOperator(
+    val min: Int,
+    val max: Int?,
+    val type: Repeat.Type,
+    val fromIndex: Int,
+    val toIndex: Int
+) : Token
+
 internal data class SymbolToken(val symbol: Symbol) : Token
 internal data class LeftBracket(val at: Int) : Token
 internal data class RightBracket(val at: Int) : Token
@@ -146,9 +169,9 @@ internal fun tokenize(str: String): List<Token> {
             '\\' -> SymbolToken(parseEscapedCharacter(reader, false))
             '[' -> SymbolToken(parseSetNotation(reader))
             '|' -> UnionOperator(cursor)
-            '*' -> RepeatOperator(0, null, cursor, cursor)
-            '+' -> RepeatOperator(1, null, cursor, cursor)
-            '?' -> RepeatOperator(0, 1, cursor, cursor)
+            '*' -> RepeatOperator(0, null, reader.readRepeatType(), cursor, cursor)
+            '+' -> RepeatOperator(1, null, reader.readRepeatType(), cursor, cursor)
+            '?' -> RepeatOperator(0, 1, reader.readRepeatType(), cursor, cursor)
             '{' -> parseRepeatNotation(reader)
             '(' -> LeftBracket(cursor)
             ')' -> RightBracket(cursor)
@@ -191,7 +214,7 @@ fun parse(str: String): RegexPart {
                 if (results.isEmpty()) {
                     throw ParseException("No operand", operator.fromIndex, operator.toIndex)
                 }
-                results.push(Repeat(results.pop(), operator.min, operator.max))
+                results.push(Repeat(results.pop(), operator.min, operator.max, operator.type))
             }
 
             is ConcatenationOperator -> {

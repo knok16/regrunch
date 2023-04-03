@@ -238,8 +238,13 @@ class ParserTest {
     @Test
     fun severalRepeatOperators() {
         assertEquals(
-            Repeat(Repeat(Repeat(Repeat(symbol('a'), 0, null), 1, null), 0, 1), 2, 2),
+            Repeat(Repeat(Repeat(symbol('a'), 0, null, Repeat.Type.POSSESSIVE), 0, 1), 2, 2),
             parse("""a*+?{2}""")
+        )
+
+        assertEquals(
+            Repeat(Repeat(Repeat(Repeat(symbol('a'), 0, null), 1, null), 0, 1), 2, 2),
+            parse("""((a*)+)?{2}""")
         )
     }
 
@@ -705,5 +710,25 @@ class ParserTest {
         assertEquals(concatenation(symbol('a'), symbol('b'), NonWordBoundary), parse("""ab\B"""))
         assertEquals(concatenation(symbol('a'), NonWordBoundary, symbol('b')), parse("""a\Bb"""))
         assertEquals(SetNotationSymbol(setOf(symbol('a'), NonWordBoundary, symbol('b'))), parse("""[a\Bb]"""))
+    }
+
+    @Test
+    fun lazyRepeats() {
+        assertEquals(Repeat(symbol('a'), 0, null, Repeat.Type.LAZY), parse("""a*?"""))
+        assertEquals(Repeat(symbol('a'), 1, null, Repeat.Type.LAZY), parse("""a+?"""))
+        assertEquals(Repeat(symbol('a'), 0, 1, Repeat.Type.LAZY), parse("""a??"""))
+        assertEquals(Repeat(symbol('a'), 2, 2, Repeat.Type.LAZY), parse("""a{2}?"""))
+        assertEquals(Repeat(symbol('a'), 2, null, Repeat.Type.LAZY), parse("""a{2,}?"""))
+        assertEquals(Repeat(symbol('a'), 2, 5, Repeat.Type.LAZY), parse("""a{2,5}?"""))
+    }
+
+    @Test
+    fun possessiveRepeats() {
+        assertEquals(Repeat(symbol('a'), 0, null, Repeat.Type.POSSESSIVE), parse("""a*+"""))
+        assertEquals(Repeat(symbol('a'), 1, null, Repeat.Type.POSSESSIVE), parse("""a++"""))
+        assertEquals(Repeat(symbol('a'), 0, 1, Repeat.Type.POSSESSIVE), parse("""a?+"""))
+        assertEquals(Repeat(symbol('a'), 2, 2, Repeat.Type.POSSESSIVE), parse("""a{2}+"""))
+        assertEquals(Repeat(symbol('a'), 2, null, Repeat.Type.POSSESSIVE), parse("""a{2,}+"""))
+        assertEquals(Repeat(symbol('a'), 2, 5, Repeat.Type.POSSESSIVE), parse("""a{2,5}+"""))
     }
 }

@@ -130,4 +130,13 @@ class E2ETest {
             dfa("""[a-z]{10,}|blablabla""").allStringsAlphabetically(9).first()
         )
     }
+
+    @Test
+    fun possessiveQuantifiers() {
+        assertEquals(
+            emptyList(),
+            dfa("""a++a""").allStringsAlphabetically(9).toList(),
+            "Regular language defined by 'a++a' regular expression should be empty, since any 'a' will be matched by possessive quantifier, and no 'a' will be left to match last 'a' in regex"
+        )
+    }
 }
