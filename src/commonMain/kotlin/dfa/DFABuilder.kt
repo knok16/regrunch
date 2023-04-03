@@ -48,3 +48,6 @@ class DFABuilder<A>(
 
 fun <A> dfa(alphabet: Set<A>, buildFunction: DFABuilder<A>.() -> Unit): DFA<A, State> =
     DFABuilder(alphabet).also { it.buildFunction() }.build()
+
+fun <A> DFABuilder<A>.newFinalState(): State =
+    newState().also { markAsFinal(it) }
