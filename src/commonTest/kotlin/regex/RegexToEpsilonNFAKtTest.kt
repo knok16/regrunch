@@ -289,7 +289,7 @@ class RegexToEpsilonNFAKtTest {
     }
 
     @Test
-    fun nonStandardAlphabet() {
+    fun nonStandardAlphabet1() {
         val alphabet = setOf('ა', 'ბ', 'გ', 'ზ', ' ')
 
         assertEquals(
@@ -306,6 +306,30 @@ class RegexToEpsilonNFAKtTest {
                 epsilonTransition(b, newFinalState())
             },
             WordSymbol.toEpsilonNFA(alphabet)
+        )
+    }
+
+    @Test
+    fun nonStandardAlphabet2() {
+        val alphabet = asciiAlphabet + setOf('١', '٢', '٣', '٤', '٥')
+
+        assertEquals(
+            epsilonNFA(alphabet) {
+                val a = newState()
+                val b = newState()
+
+                epsilonTransition(startState, a)
+                for (digit in '0'..'9')
+                    transition(a, b, digit)
+                transition(a, b, '١')
+                transition(a, b, '٢')
+                transition(a, b, '٣')
+                transition(a, b, '٤')
+                transition(a, b, '٥')
+
+                epsilonTransition(b, newFinalState())
+            },
+            DigitSymbol.toEpsilonNFA(alphabet)
         )
     }
 }
