@@ -139,4 +139,23 @@ class E2ETest {
             "Regular language defined by 'a++a' regular expression should be empty, since any 'a' will be matched by possessive quantifier, and no 'a' will be left to match last 'a' in regex"
         )
     }
+
+    @Test
+    fun longString() {
+        assertEquals(
+            listOf(
+                "absywgwi0uhwduhwuh",
+                "absywgwi1uhwduhwuh",
+                "absywgwi2uhwduhwuh",
+                "absywgwi3uhwduhwuh",
+                "absywgwi4uhwduhwuh",
+                "absywgwi5uhwduhwuh",
+                "absywgwi6uhwduhwuh",
+                "absywgwi7uhwduhwuh",
+                "absywgwi8uhwduhwuh",
+                "absywgwi9uhwduhwuh"
+            ),
+            dfa("""absywgwi\duhwduhwuh""").allStringsAlphabetically().toList()
+        )
+    }
 }
