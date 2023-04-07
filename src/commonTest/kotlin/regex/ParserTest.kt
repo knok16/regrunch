@@ -422,6 +422,12 @@ class ParserTest {
     }
 
     @Test
+    fun emptySetNotation() {
+        assertEquals(SetNotationSymbol(emptySet()), parse("""[]"""))
+        assertEquals(SetNotationSymbol(emptySet(), negated = true), parse("""[^]"""))
+    }
+
+    @Test
     fun setNotationNoClosingBracket() {
         assertFailsWith<ParseException> {
             parse("""abc[123""")

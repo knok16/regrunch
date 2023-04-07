@@ -11,7 +11,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class E2ETest {
-    private val asciiAlphabet = (0..127).map { it.toChar() }.toSet()
+    private val asciiAlphabet = (0x20..0x7F).map { it.toChar() }.toSet()
 
     private fun dfa(pattern: String): DFA<Char, State> =
         parse(pattern).toEpsilonNFA(asciiAlphabet).toNFA().toDFA()
@@ -156,6 +156,18 @@ class E2ETest {
                 "absywgwi9uhwduhwuh"
             ),
             dfa("""absywgwi\duhwduhwuh""").allStringsAlphabetically().toList()
+        )
+    }
+
+    @Test
+    fun emptySetNotation() {
+        assertEquals(
+            emptyList(),
+            dfa("""abc[]""").allStringsAlphabetically().toList()
+        )
+        assertEquals(
+            asciiAlphabet.map { "abc$it" },
+            dfa("""abc[^]""").allStringsAlphabetically().toList()
         )
     }
 }
