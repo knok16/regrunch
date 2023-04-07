@@ -35,7 +35,7 @@ class E2ETest {
 
     @Test
     fun allCombinations() {
-        val n = 26 + 26 + 10
+        val n = 26 + 26 + 10 + 1
         assertEquals(
             n * n * n,
             dfa("""\w{3}""").allStringsAlphabetically().count()

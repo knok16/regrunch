@@ -5,12 +5,68 @@ import epsilonnfa.newFinalState
 import epsilonnfa.transition
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 private fun concatenation(vararg parts: RegexPart) = Concatenation(parts.toList())
 private fun union(vararg parts: RegexPart) = Union(parts.toSet())
 
 class RegexToEpsilonNFAKtTest {
     private val asciiAlphabet = (0..127).map { it.toChar() }.toSet()
+
+    @Test
+    fun isWordChar() {
+        assertFalse('\t'.isWordChar())
+        assertFalse(' '.isWordChar())
+        assertFalse('!'.isWordChar())
+        assertFalse('('.isWordChar())
+        assertFalse('*'.isWordChar())
+        assertFalse('-'.isWordChar())
+        assertFalse('.'.isWordChar())
+        assertFalse('/'.isWordChar())
+        assertFalse(';'.isWordChar())
+        assertFalse(':'.isWordChar())
+        assertFalse('<'.isWordChar())
+        assertFalse('='.isWordChar())
+        assertFalse('>'.isWordChar())
+        assertFalse('?'.isWordChar())
+        assertFalse('@'.isWordChar())
+        assertFalse('['.isWordChar())
+        assertFalse('\\'.isWordChar())
+        assertFalse(']'.isWordChar())
+        assertFalse('^'.isWordChar())
+        assertFalse('`'.isWordChar())
+        assertFalse('{'.isWordChar())
+        assertFalse('|'.isWordChar())
+        assertFalse('}'.isWordChar())
+        assertFalse('~'.isWordChar())
+
+        assertTrue('1'.isWordChar())
+        assertTrue('5'.isWordChar())
+        assertTrue('0'.isWordChar())
+        assertTrue('A'.isWordChar())
+        assertTrue('G'.isWordChar())
+        assertTrue('R'.isWordChar())
+        assertTrue('S'.isWordChar())
+        assertTrue('Z'.isWordChar())
+        assertTrue('_'.isWordChar())
+        assertTrue('a'.isWordChar())
+        assertTrue('f'.isWordChar())
+        assertTrue('k'.isWordChar())
+        assertTrue('u'.isWordChar())
+
+        assertTrue('ა'.isWordChar())
+        assertTrue('ბ'.isWordChar())
+        assertTrue('გ'.isWordChar())
+        assertTrue('ზ'.isWordChar())
+        assertTrue('ჯ'.isWordChar())
+
+        assertTrue('١'.isWordChar())
+        assertTrue('٢'.isWordChar())
+        assertTrue('٣'.isWordChar())
+        assertTrue('٤'.isWordChar())
+        assertTrue('٥'.isWordChar())
+    }
 
     @Test
     fun singleSymbol() {
@@ -42,6 +98,28 @@ class RegexToEpsilonNFAKtTest {
                 epsilonTransition(b, newFinalState())
             },
             DigitSymbol.toEpsilonNFA(asciiAlphabet)
+        )
+    }
+
+    @Test
+    fun wordSymbol() {
+        assertEquals(
+            epsilonNFA(asciiAlphabet) {
+                val a = newState()
+                val b = newState()
+
+                epsilonTransition(startState, a)
+                for (digit in 'a'..'z')
+                    transition(a, b, digit)
+                for (digit in 'A'..'Z')
+                    transition(a, b, digit)
+                for (digit in '0'..'9')
+                    transition(a, b, digit)
+                transition(a, b, '_')
+
+                epsilonTransition(b, newFinalState())
+            },
+            WordSymbol.toEpsilonNFA(asciiAlphabet)
         )
     }
 

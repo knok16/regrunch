@@ -6,13 +6,23 @@ import epsilonnfa.EpsilonNFABuilder
 import epsilonnfa.newFinalState
 import epsilonnfa.transition
 
-// TODO add isPunctuation/Connector and isMark/Nonspacing https://learn.microsoft.com/en-us/dotnet/standard/base-types/character-classes-in-regular-expressions#WordCharacter
-internal fun Char.isWordChar(): Boolean = isLetter() || isDigit()
+internal fun Char.isWordChar(): Boolean = category in setOf(
+    CharCategory.LOWERCASE_LETTER,
+    CharCategory.UPPERCASE_LETTER,
+    CharCategory.TITLECASE_LETTER,
+    CharCategory.OTHER_LETTER,
+    CharCategory.MODIFIER_LETTER,
+    CharCategory.NON_SPACING_MARK,
+    CharCategory.DECIMAL_DIGIT_NUMBER,
+    CharCategory.CONNECTOR_PUNCTUATION
+)
 
 // TODO move .toSet() at the end? Any performance ramifications?
 internal fun Symbol.convertToChars(alphabet: Set<Char>): Set<Char> = when (this) {
     is ExactSymbol -> setOf(value)
-    is AnySymbol -> alphabet // TODO remove new lines (and possible any other characters that do not covered by . in regex)
+    // TODO remove new lines (and possible any other characters that do not covered by . in regex)
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/dotAll
+    is AnySymbol -> alphabet
     is DigitSymbol -> alphabet.filter { it.isDigit() }.toSet()
     is NonDigitSymbol -> alphabet.filterNot { it.isDigit() }.toSet()
     is WhitespaceSymbol -> alphabet.filter { it.isWhitespace() }.toSet()
