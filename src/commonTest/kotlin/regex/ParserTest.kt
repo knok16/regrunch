@@ -650,10 +650,35 @@ class ParserTest {
     }
 
     @Test
-    fun freeSpaceMode() {
+    fun freeSpaceModeWhitespacesIgnored() {
         assertEquals(concatenation(symbol('a'), symbol('b'), symbol('c')), parse("a\rb c"))
+    }
+
+    @Test
+    fun freeSpaceModeWhitespacesNotIgnoredInSetNotation() {
         assertEquals(SetNotationSymbol(symbols('a', 'b', 'c', ' ')), parse("""[a b c]"""))
+    }
+
+    @Test
+    fun freeSpaceModeEscapedWhitespace() {
         assertEquals(concatenation(symbol(' '), symbol('d')), parse("""\ d"""))
+    }
+
+    @Test
+    fun freeSpaceModeWithRepeatNotation() {
+        assertEquals(Repeat(symbol('a'), 0, null), parse("a \t *"))
+        assertEquals(Repeat(symbol('a'), 1, null), parse("a \t +"))
+        assertEquals(Repeat(symbol('a'), 0, 1), parse("a \t ?"))
+
+        assertEquals(Repeat(symbol('a'), 13, 13), parse("a{ \t 13}"))
+        assertEquals(Repeat(symbol('a'), 13, 13), parse("a{13 \t }"))
+
+        assertEquals(Repeat(symbol('a'), 13, null), parse("a{13, \t }"))
+
+        assertEquals(Repeat(symbol('a'), 13, 22), parse("a{ \t 13,22}"))
+        assertEquals(Repeat(symbol('a'), 13, 22), parse("a{13 \t ,22}"))
+        assertEquals(Repeat(symbol('a'), 13, 22), parse("a{13, \t 22}"))
+        assertEquals(Repeat(symbol('a'), 13, 22), parse("a{13,22 \t }"))
     }
 
     @Test
