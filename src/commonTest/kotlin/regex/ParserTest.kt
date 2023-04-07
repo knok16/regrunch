@@ -313,7 +313,7 @@ class ParserTest {
         }.let {
             assertEquals(
                 ParseException(
-                    "Min number of repeats should be less of equals than max number of repeats",
+                    "Min number of repeats (3) should be less or equals than max (2) number of repeats",
                     3,
                     7
                 ), it

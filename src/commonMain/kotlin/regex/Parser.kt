@@ -88,24 +88,26 @@ internal fun parseSetNotation(reader: Reader): SetNotationSymbol {
     val negate = reader.peek() == '^'
     if (negate) reader.next()
     while (true) {
-        val symbol = when (val char = reader.next() ?: throw ParseException("Unbalanced square bracket", initialCursor)) {
-            ']' -> break
-            '\\' -> parseEscapedCharacter(reader, true)
-            else -> ExactSymbol(char)
-        }
-
-        if (reader.peek() == '-') {
-            reader.next() // pop '-' character
-            val to = when (val char = reader.next() ?: throw ParseException("Unbalanced square bracket", initialCursor)) {
-                ']' -> {
-                    symbols.add(symbol)
-                    symbols.add(ExactSymbol('-'))
-                    break
-                }
-
+        val symbol =
+            when (val char = reader.next() ?: throw ParseException("Unbalanced square bracket", initialCursor)) {
+                ']' -> break
                 '\\' -> parseEscapedCharacter(reader, true)
                 else -> ExactSymbol(char)
             }
+
+        if (reader.peek() == '-') {
+            reader.next() // pop '-' character
+            val to =
+                when (val char = reader.next() ?: throw ParseException("Unbalanced square bracket", initialCursor)) {
+                    ']' -> {
+                        symbols.add(symbol)
+                        symbols.add(ExactSymbol('-'))
+                        break
+                    }
+
+                    '\\' -> parseEscapedCharacter(reader, true)
+                    else -> ExactSymbol(char)
+                }
             if (symbol is ExactSymbol && to is ExactSymbol) {
                 (symbol.value..to.value).map(::ExactSymbol).forEach(symbols::add)
             } else {
@@ -138,6 +140,12 @@ internal fun parseRepeatNotation(reader: Reader): RepeatOperator {
         2 -> (ints[0] ?: 0) to ints[1]
         else -> throw ParseException("Unexpected number of parts in repeat operator", initialCursor, endingCursor)
     }
+
+    if (max != null && max < min) throw ParseException(
+        "Min number of repeats ($min) should be less or equals than max ($max) number of repeats",
+        initialCursor,
+        endingCursor
+    )
 
     return RepeatOperator(min, max, reader.readRepeatType(), initialCursor, endingCursor)
 }
