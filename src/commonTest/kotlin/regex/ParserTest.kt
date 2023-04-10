@@ -251,7 +251,17 @@ class ParserTest {
     @Test
     fun repeatOperatorNoClosingCurlyBracket() {
         assertFailsWith<ParseException> {
-            parse("""abc{1,2""")
+            parse("""abc{12""")
+        }.let {
+            assertEquals(ParseException("Unbalanced curly bracket", 3), it)
+        }
+        assertFailsWith<ParseException> {
+            parse("""abc{12,""")
+        }.let {
+            assertEquals(ParseException("Expected decimal digit but got end of input", 7), it)
+        }
+        assertFailsWith<ParseException> {
+            parse("""abc{12,34""")
         }.let {
             assertEquals(ParseException("Unbalanced curly bracket", 3), it)
         }
@@ -262,12 +272,31 @@ class ParserTest {
         assertFailsWith<ParseException> {
             parse("""abc{1,2,3}""")
         }.let {
-            assertEquals(ParseException("Unexpected number of parts in repeat operator", 3, 9), it)
+            assertEquals(ParseException("Expected '}' but got ','", 7, 7), it)
         }
         assertFailsWith<ParseException> {
             parse("""abc{1,22,3}""")
         }.let {
-            assertEquals(ParseException("Unexpected number of parts in repeat operator", 3, 10), it)
+            assertEquals(ParseException("Expected '}' but got ','", 8, 8), it)
+        }
+    }
+
+    @Test
+    fun repeatOperatorFirstIntegerIsRequired() {
+        assertFailsWith<ParseException> {
+            parse("""abc{}""")
+        }.let {
+            assertEquals(ParseException("Expected decimal digit but got '}'", 4), it)
+        }
+        assertFailsWith<ParseException> {
+            parse("""abc{,}""")
+        }.let {
+            assertEquals(ParseException("Expected decimal digit but got ','", 4), it)
+        }
+        assertFailsWith<ParseException> {
+            parse("""abc{,2}""")
+        }.let {
+            assertEquals(ParseException("Expected decimal digit but got ','", 4), it)
         }
     }
 
@@ -276,27 +305,27 @@ class ParserTest {
         assertFailsWith<ParseException> {
             parse("""abc{abc,1}""")
         }.let {
-            assertEquals(ParseException("Expected positive integers in repeat notation, but got 'abc'", 6, 8), it)
+            assertEquals(ParseException("Expected decimal digit but got 'a'", 4), it)
         }
         assertFailsWith<ParseException> {
             parse("""abc{1,abc}""")
         }.let {
-            assertEquals(ParseException("Expected positive integers in repeat notation, but got 'abc'", 6, 8), it)
+            assertEquals(ParseException("Expected decimal digit but got 'a'", 6), it)
         }
         assertFailsWith<ParseException> {
             parse("""abc{-1,}""")
         }.let {
-            assertEquals(ParseException("Expected positive integers in repeat notation, but got '-1'", 4, 5), it)
+            assertEquals(ParseException("Expected decimal digit but got '-'", 4), it)
         }
         assertFailsWith<ParseException> {
-            parse("""abc{,-1}""")
+            parse("""abc{1,-1}""")
         }.let {
-            assertEquals(ParseException("Expected positive integers in repeat notation, but got '-1'", 4, 5), it)
+            assertEquals(ParseException("Expected decimal digit but got '-'", 6), it)
         }
         assertFailsWith<ParseException> {
             parse("""abc{1,2 3,4}""")
         }.let {
-            assertEquals(ParseException("Expected positive integers in repeat notation, but got '2 3'", 4, 5), it)
+            assertEquals(ParseException("Expected '}' but got '3'", 8), it)
         }
     }
 

@@ -4,8 +4,7 @@ import utils.Stack
 import utils.isEmpty
 import utils.isNotEmpty
 
-data class ParseException constructor(override val message: String, val fromIndex: Int, val toIndex: Int) :
-    Exception(message) {
+data class ParseException(override val message: String, val fromIndex: Int, val toIndex: Int) : Exception(message) {
     constructor(message: String, at: Int) : this(message, at, at)
 }
 
@@ -17,7 +16,7 @@ internal class Reader(private val str: String) {
     fun prevCursor(): Int = i - 1 // TODO ?
 }
 
-internal fun Reader.readHexadecimal(): Int =
+internal fun Reader.readHexDigit(): Int =
     when (val char = next() ?: throw ParseException("Expected hexadecimal digit but got end of input", cursor())) {
         in '0'..'9' -> char - '0'
         in 'A'..'F' -> char - 'A' + 10
@@ -64,8 +63,8 @@ internal fun parseEscapedCharacter(reader: Reader, forSetNotation: Boolean): Sym
         'z' -> EndOfStringOnly
         'G' -> PreviousMatch
         'B' -> NonWordBoundary
-        'x' -> ExactSymbol((reader.readHexadecimal() * 0x10 + reader.readHexadecimal()).toChar())
-        'u' -> ExactSymbol((1..4).map { reader.readHexadecimal() }.reduce { acc, digit -> acc * 0x10 + digit }.toChar())
+        'x' -> ExactSymbol((reader.readHexDigit() * 0x10 + reader.readHexDigit()).toChar())
+        'u' -> ExactSymbol((1..4).map { reader.readHexDigit() }.reduce { acc, digit -> acc * 0x10 + digit }.toChar())
         'c' -> {
             val control = reader.next() ?: throw ParseException("No control character", reader.prevCursor())
             val code = when (control) {
@@ -123,31 +122,60 @@ internal fun parseSetNotation(reader: Reader): SetNotationSymbol {
     return SetNotationSymbol(symbols, negate)
 }
 
-// TODO rework!
+internal fun Reader.readDecimalDigit(): Int =
+    when (val char = next() ?: throw ParseException("Expected decimal digit but got end of input", cursor())) {
+        in '0'..'9' -> char - '0'
+        else -> throw ParseException("Expected decimal digit but got '$char'", prevCursor())
+    }
+
+internal fun Reader.readDecimalNumber(): Int {
+    var result = readDecimalDigit()
+    while (peek() in '0'..'9') {
+        result = result * 10 + readDecimalDigit()
+    }
+    return result
+}
+
+internal fun Reader.skipWhitespaces() {
+    while (peek()?.isWhitespace() == true) next()
+}
+
 internal fun parseRepeatNotation(reader: Reader): RepeatOperator {
     val initialCursor = reader.prevCursor()
-    val s = StringBuilder()
-    while (true) {
-        val char = reader.next() ?: throw ParseException("Unbalanced curly bracket", initialCursor)
-        if (char == '}') break else s.append(char)
-    }
-    val ints = s.toString().split(',').map { it.trim() }.map { it.takeIf { it.isNotBlank() } }
-        .map { it?.toInt() } // TODO add error handling
-    val endingCursor = reader.prevCursor()
-    val (min, max) = when (ints.size) {
-        0 -> 0 to null // TODO is it legal?
-        1 -> ints[0]!! to ints[0] // TODO think about !!
-        2 -> (ints[0] ?: 0) to ints[1]
-        else -> throw ParseException("Unexpected number of parts in repeat operator", initialCursor, endingCursor)
+
+    reader.skipWhitespaces()
+    val min = reader.readDecimalNumber()
+    reader.skipWhitespaces()
+
+    val max = when (val delimiter = reader.next()) {
+        null -> throw ParseException("Unbalanced curly bracket", initialCursor)
+        ',' -> {
+            reader.skipWhitespaces()
+            if (reader.peek() == '}') {
+                reader.next()
+                null
+            } else {
+                val t = reader.readDecimalNumber()
+                reader.skipWhitespaces()
+                when (val char = reader.next()) {
+                    null -> throw ParseException("Unbalanced curly bracket", initialCursor)
+                    '}' -> t
+                    else -> throw ParseException("Expected '}' but got '$char'", reader.prevCursor())
+                }
+            }
+        }
+
+        '}' -> min
+        else -> throw ParseException("Expected ',' or '}', but got '$delimiter'", reader.prevCursor())
     }
 
     if (max != null && max < min) throw ParseException(
         "Min number of repeats ($min) should be less or equals than max ($max) number of repeats",
         initialCursor,
-        endingCursor
+        reader.prevCursor()
     )
 
-    return RepeatOperator(min, max, reader.readRepeatType(), initialCursor, endingCursor)
+    return RepeatOperator(min, max, reader.readRepeatType(), initialCursor, reader.prevCursor())
 }
 
 internal sealed interface Token
