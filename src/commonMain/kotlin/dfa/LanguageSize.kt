@@ -1,5 +1,10 @@
 package dfa
 
+import utils.BigInteger
+import utils.ONE
+import utils.ZERO
+import utils.plus
+
 fun <A, S> isLanguageEmpty(dfa: DFA<A, S>): Boolean {
     val visited = HashSet<S>()
 
@@ -14,14 +19,13 @@ fun <A, S> isLanguageEmpty(dfa: DFA<A, S>): Boolean {
     return !dfs(dfa.startState)
 }
 
-// TODO use BigInteger?
-fun <A, S> languageSize(dfa: DFA<A, S>): Long? {
+fun <A, S> languageSize(dfa: DFA<A, S>): BigInteger? {
     val deadStates = dfa.deadStates()
     val currentlyIn = HashSet<S>()
-    val resultCache = HashMap<S, Long?>()
+    val resultCache = HashMap<S, BigInteger?>()
 
-    fun dfs(state: S): Long? {
-        if (state in deadStates) return 0L
+    fun dfs(state: S): BigInteger? {
+        if (state in deadStates) return ZERO
 
         if (state in resultCache) return resultCache[state]
 
@@ -29,8 +33,8 @@ fun <A, S> languageSize(dfa: DFA<A, S>): Long? {
 
         currentlyIn.add(state)
 
-        val result = dfa.alphabet.fold<A, Long?>(
-            if (state in dfa.finalStates) 1L else 0L
+        val result = dfa.alphabet.fold<A, BigInteger?>(
+            if (state in dfa.finalStates) ONE else ZERO
         ) { acc, symbol ->
             acc?.let { dfs(dfa.transition(state, symbol))?.let { it + acc } }
         }
