@@ -47,3 +47,8 @@ jobs:
 
       # run tests!
       - run: gradle test
+
+      - store_test_results:
+          path: build/test-results/jvmTest
+      - store_test_results:
+          path: build/test-results/nativeTest
