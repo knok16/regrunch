@@ -63,8 +63,8 @@ internal fun parseEscapedCharacter(reader: Reader, forSetNotation: Boolean): Sym
         'z' -> EndOfStringOnly
         'G' -> PreviousMatch
         'B' -> NonWordBoundary
-        'x' -> ExactSymbol((reader.readHexDigit() * 0x10 + reader.readHexDigit()).toChar())
-        'u' -> ExactSymbol((1..4).map { reader.readHexDigit() }.reduce { acc, digit -> acc * 0x10 + digit }.toChar())
+        'x' -> ExactSymbol(((reader.readHexDigit() shl 4) or reader.readHexDigit()).toChar())
+        'u' -> ExactSymbol((1..4).map { reader.readHexDigit() }.reduce { acc, digit -> (acc shl 4) or digit }.toChar())
         'c' -> {
             val control = reader.next() ?: throw ParseException("No control character", reader.prevCursor())
             val code = when (control) {
