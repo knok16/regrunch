@@ -16,6 +16,11 @@ class ParserTest {
     }
 
     @Test
+    fun emptyStringAsPattern() {
+        assertEquals(symbol('a'), parse(""""""))
+    }
+
+    @Test
     fun periodSpecialSymbol() {
         assertEquals(AnySymbol, parse("""."""))
     }
