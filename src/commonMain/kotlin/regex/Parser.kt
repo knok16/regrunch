@@ -180,7 +180,7 @@ internal fun parseRepeatNotation(reader: Reader): RepeatOperator {
 
 internal sealed interface Token
 internal data class UnionOperator(val at: Int) : Token
-internal data class ConcatenationOperator(val at: Int) : Token // TODO what to do here?
+object ConcatenationOperator : Token
 internal data class RepeatOperator(
     val min: Int,
     val max: Int?,
@@ -221,7 +221,7 @@ internal fun tokenize(str: String): List<Token> {
             (result.last() is RepeatOperator || result.last() is SymbolToken || result.last() is RightBracket) &&
             (token is SymbolToken || token is LeftBracket)
         )
-            result.add(ConcatenationOperator(cursor))
+            result.add(ConcatenationOperator)
         result.add(token)
     }
 
