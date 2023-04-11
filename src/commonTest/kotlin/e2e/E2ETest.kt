@@ -2,6 +2,7 @@ package e2e
 
 import State
 import dfa.DFA
+import dfa.Fixtures.integers
 import dfa.Fixtures.numbersWithDigitSum
 import dfa.allStringsAlphabetically
 import dfa.languageSize
@@ -279,6 +280,14 @@ class E2ETest {
                 """
                 )
             )
+        )
+    }
+
+    @Test
+    fun integersDfa() {
+        assertEquals(
+            (0 until 10000).map { it.toString() }.sorted(),
+            integers.allStringsAlphabetically(4).toList()
         )
     }
 

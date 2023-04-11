@@ -348,6 +348,9 @@ object Fixtures {
         markAsFinal(final)
     }
 
+    /**
+     * Deterministic finite automaton with alphabet of decimal digits that accepts non-negative integers
+     */
     val integers = dfa(('0'..'9').toSet()) {
         val zero = newState()
         val final = newState()
@@ -365,7 +368,7 @@ object Fixtures {
 
     /**
      * Creates deterministic finite automaton with alphabet of decimal digits
-     * that accepts positive numbers (without leading zeroes) with defined sum of digits.
+     * that accepts positive integers (without leading zeroes) with defined sum of digits.
      * @param digitSum desired digit sum
      * @return deterministic finite automaton
      */
