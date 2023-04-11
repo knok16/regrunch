@@ -2,6 +2,7 @@ package e2e
 
 import State
 import dfa.DFA
+import dfa.Fixtures.numbersWithDigitSum
 import dfa.allStringsAlphabetically
 import dfa.languageSize
 import epsilonnfa.toNFA
@@ -279,5 +280,21 @@ class E2ETest {
                 )
             )
         )
+    }
+
+    @Test
+    fun numberWithDigitSum() {
+        val expected = (1 until 1000)
+            .groupBy { (it % 10) + (it / 10 % 10) + (it / 100) }
+            .mapValues { (_, numbers) ->
+                numbers.map { it.toString() }.sorted()
+            }
+
+        for (sum in 1..(expected.maxOf { it.key } + 2)) {
+            assertEquals(
+                expected[sum] ?: emptyList(),
+                numbersWithDigitSum(sum).allStringsAlphabetically(3).toList()
+            )
+        }
     }
 }

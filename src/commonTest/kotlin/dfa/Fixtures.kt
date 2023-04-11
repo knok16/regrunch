@@ -362,4 +362,24 @@ object Fixtures {
         markAsFinal(zero)
         markAsFinal(final)
     }
+
+    /**
+     * Creates deterministic finite automaton with alphabet of decimal digits
+     * that accepts positive numbers (without leading zeroes) with defined sum of digits.
+     * @param digitSum desired digit sum
+     * @return deterministic finite automaton
+     */
+    fun numbersWithDigitSum(digitSum: Int): DFA<Char, State> = dfa(('0'..'9').toSet()) {
+        val sums = Array(digitSum + 1) { if (it == 0) startState else newState() }
+
+        sums.forEachIndexed { sum, from ->
+            val start = if (from == 0) 1 else 0
+            (start..9)
+                .map { it to (it + sum) }
+                .filter { (_, newSum) -> newSum <= digitSum }
+                .forEach { (on, newSum) -> transition(from, sums[newSum], '0' + on) }
+        }
+
+        markAsFinal(sums.last())
+    }
 }
