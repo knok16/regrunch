@@ -6,7 +6,9 @@ import kotlin.test.assertFailsWith
 
 private fun symbol(symbol: Char) = ExactSymbol(symbol)
 private fun symbols(vararg symbols: Char) = symbols.map { ExactSymbol(it) }.toSet()
+private fun concatenation(str: String) = Concatenation(str.map { ExactSymbol(it) })
 private fun concatenation(vararg parts: RegexPart) = Concatenation(parts.toList())
+private fun union(vararg parts: RegexPart) = Union(parts.toSet())
 
 // TODO rethink indexes in errors when string ends abruptly
 class ParserTest {
@@ -795,5 +797,119 @@ class ParserTest {
         assertEquals(Repeat(symbol('a'), 2, 2, Repeat.Type.POSSESSIVE), parse("""a{2}+"""))
         assertEquals(Repeat(symbol('a'), 2, null, Repeat.Type.POSSESSIVE), parse("""a{2,}+"""))
         assertEquals(Repeat(symbol('a'), 2, 5, Repeat.Type.POSSESSIVE), parse("""a{2,5}+"""))
+    }
+
+    @Test
+    fun operatorPrioritiesMoreComplexTest1() {
+        assertEquals(
+            union(concatenation("abc"), symbol('d'), concatenation("efg")),
+            parse("""abc|d|efg""")
+        )
+    }
+
+    @Test
+    fun operatorPrioritiesMoreComplexTest2() {
+        assertEquals(
+            union(symbol('a'), symbol('b'), concatenation("cde"), symbol('f'), symbol('g')),
+            parse("""a|b|cde|f|g""")
+        )
+    }
+
+    @Test
+    fun operatorPrioritiesMoreComplexTest3() {
+        assertEquals(
+            union(
+                concatenation("ab"),
+                concatenation(
+                    symbol('c'),
+                    Repeat(symbol('d'), 1, null),
+                    symbol('e'),
+                    Repeat(symbol('f'), 0, null),
+                    symbol('g')
+                )
+            ),
+            parse("""ab|cd+ef*g""")
+        )
+    }
+
+    @Test
+    fun operatorPrioritiesMoreComplexTest4() {
+        assertEquals(
+            union(
+                concatenation("ab"),
+                concatenation(
+                    symbol('c'),
+                    Repeat(symbol('d'), 1, null),
+                    symbol('e')
+                ),
+                concatenation(
+                    Repeat(symbol('f'), 0, null),
+                    symbol('g')
+                )
+            ),
+            parse("""ab|cd+e|f*g""")
+        )
+    }
+
+    @Test
+    fun operatorPrioritiesMoreComplexTest5() {
+        assertEquals(
+            concatenation(
+                union(
+                    symbol('a'),
+                    symbol('b'),
+                    symbol('c')
+                ),
+                symbol('d'),
+                union(
+                    symbol('e'),
+                    symbol('f'),
+                    symbol('g')
+                )
+            ),
+            parse("""(a|b|c)d(e|f|g)""")
+        )
+    }
+
+    @Test
+    fun operatorPrioritiesMoreComplexTest6() {
+        val expected = union(
+            symbol('a'),
+            concatenation(
+                union(symbol('b'), symbol('c')),
+                symbol('d'),
+                symbol('e')
+            ),
+            symbol('f'),
+            symbol('g')
+        )
+        assertEquals(expected, parse("""a|(b|c)de|(f)|g"""))
+        assertEquals(expected, parse("""(a|(b|c)de|(f)|g)"""))
+        assertEquals(expected, parse("""a|((b|c)de)|(f)|g"""))
+        assertEquals(expected, parse("""a|((b|c)de|(f))|g"""))
+        assertEquals(expected, parse("""a|(b|c)de|((f)|g)"""))
+        assertEquals(expected, parse("""a|((b|c)de|(f)|g)"""))
+        assertEquals(expected, parse("""((((a|(((b|(c)))de))|((f)|g))))"""))
+    }
+
+    @Test
+    fun operatorPrioritiesMoreComplexTest7() {
+        val expected = union(
+            symbol('a'),
+            concatenation(
+                Repeat(union(Repeat(symbol('b'), 2, null), symbol('c')), 0, null),
+                symbol('d'),
+                Repeat(symbol('e'), 0, 1)
+            ),
+            Repeat(Repeat(symbol('f'), 1, null), 1, null),
+            symbol('g')
+        )
+        assertEquals(expected, parse("""a|(b{2,}|c)*de?|(f+)+|g"""))
+        assertEquals(expected, parse("""(a|(b{2,}|c)*de?|(f+)+|g)"""))
+        assertEquals(expected, parse("""a|((b{2,}|c)*de?)|(f+)+|g"""))
+        assertEquals(expected, parse("""a|((b{2,}|c)*de?|(f+)+)|g"""))
+        assertEquals(expected, parse("""a|(b{2,}|c)*de?|((f+)+|g)"""))
+        assertEquals(expected, parse("""a|((b{2,}|c)*de?|(f+)+|g)"""))
+        assertEquals(expected, parse("""((((a|(((b{2,}|(c))*)d(e)?))|((f+)+|g))))"""))
     }
 }
