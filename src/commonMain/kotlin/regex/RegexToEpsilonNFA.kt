@@ -51,9 +51,16 @@ internal fun convert(regexPart: RegexPart, builder: EpsilonNFABuilder<Char>, alp
 
         is Concatenation -> regexPart.parts
             .map { convert(it, builder, alphabet) }
-            .reduce { (a, b), (c, d) ->
+            .takeIf { it.isNotEmpty() }
+            ?.reduce { (a, b), (c, d) ->
                 builder.epsilonTransition(b, c)
                 a to d
+            }
+            ?: run {
+                val start = builder.newState()
+                val finish = builder.newState()
+                builder.epsilonTransition(start, finish)
+                start to finish
             }
 
         is Repeat -> {

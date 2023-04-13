@@ -19,7 +19,7 @@ class ParserTest {
 
     @Test
     fun emptyStringAsPattern() {
-        assertEquals(symbol('a'), parse(""""""))
+        assertEquals(concatenation(), parse(""""""))
     }
 
     @Test

@@ -241,6 +241,8 @@ internal fun union(left: RegexPart, right: RegexPart): RegexPart = Union(
 fun parse(str: String): RegexPart {
     val tokens = tokenize(str)
 
+    if (tokens.isEmpty()) return Concatenation(emptyList())
+
     val results = Stack<RegexPart>()
     val operatorStack = Stack<Token>()
 

@@ -314,4 +314,12 @@ class E2ETest {
             )
         }
     }
+
+    @Test
+    fun emptyPattern() {
+        assertEquals(
+            listOf(""),
+            dfa("").allStringsAlphabetically().toList()
+        )
+    }
 }
