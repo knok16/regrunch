@@ -207,6 +207,21 @@ class RegexToEpsilonNFAKtTest {
     }
 
     @Test
+    fun emptyUnion() {
+        assertEquals(
+            epsilonNFA(asciiAlphabet) {
+                val a = newState()
+                val b = newState()
+
+                epsilonTransition(startState, a)
+                epsilonTransition(b, newFinalState())
+            },
+            Union(emptySet()).toEpsilonNFA(asciiAlphabet)
+        )
+    }
+
+
+    @Test
     fun optional() {
         assertEquals(
             epsilonNFA(asciiAlphabet) {
