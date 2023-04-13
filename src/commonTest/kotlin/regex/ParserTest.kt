@@ -9,6 +9,7 @@ private fun symbols(vararg symbols: Char) = symbols.map { ExactSymbol(it) }.toSe
 private fun concatenation(str: String) = Concatenation(str.map { ExactSymbol(it) })
 private fun concatenation(vararg parts: RegexPart) = Concatenation(parts.toList())
 private fun union(vararg parts: RegexPart) = Union(parts.toSet())
+private fun anySymbol(vararg symbols: Char) = SetNotationSymbol(symbols.map { ExactSymbol(it) }.toSet())
 
 // TODO rethink indexes in errors when string ends abruptly
 class ParserTest {
@@ -911,5 +912,148 @@ class ParserTest {
         assertEquals(expected, parse("""a|(b{2,}|c)*de?|((f+)+|g)"""))
         assertEquals(expected, parse("""a|((b{2,}|c)*de?|(f+)+|g)"""))
         assertEquals(expected, parse("""((((a|(((b{2,}|(c))*)d(e)?))|((f+)+|g))))"""))
+    }
+
+    @Test
+    fun numbersFrom0To255_1() {
+        val digits = anySymbol('0', '1', '2', '3', '4', '5', '6', '7', '8', '9')
+        assertEquals(
+            union(
+                concatenation(symbol('2'), symbol('5'), anySymbol('0', '1', '2', '3', '4', '5')),
+                concatenation(symbol('2'), anySymbol('0', '1', '2', '3', '4'), digits),
+                concatenation(symbol('1'), digits, digits),
+                concatenation(Repeat(anySymbol('1', '2', '3', '4', '5', '6', '7', '8', '9'), 0, 1), digits),
+            ), parse(
+                """25[0-5]|
+            2[0-4][0-9]|
+            1[0-9][0-9]|
+            [1-9]?[0-9]"""
+            )
+        )
+    }
+
+    @Test
+    fun numbersFrom0To255_2() {
+        assertEquals(
+            union(
+                concatenation(symbol('2'), symbol('5'), anySymbol('0', '1', '2', '3', '4', '5')),
+                concatenation(symbol('2'), anySymbol('0', '1', '2', '3', '4'), DigitSymbol),
+                concatenation(symbol('1'), DigitSymbol, DigitSymbol),
+                concatenation(Repeat(anySymbol('1', '2', '3', '4', '5', '6', '7', '8', '9'), 0, 1), DigitSymbol),
+            ), parse(
+                """25[0-5]|
+            2[0-4]\d|
+            1\d\d|
+            [1-9]?\d"""
+            )
+        )
+    }
+
+    @Test
+    fun ipV4regex_1() {
+        val digits = anySymbol('0', '1', '2', '3', '4', '5', '6', '7', '8', '9')
+        assertEquals(
+            concatenation(
+                Repeat(
+                    concatenation(
+                        union(
+                            concatenation(symbol('2'), symbol('5'), anySymbol('0', '1', '2', '3', '4', '5')),
+                            concatenation(symbol('2'), anySymbol('0', '1', '2', '3', '4'), digits),
+                            concatenation(symbol('1'), digits, digits),
+                            concatenation(
+                                Repeat(anySymbol('1', '2', '3', '4', '5', '6', '7', '8', '9'), 0, 1),
+                                digits
+                            ),
+                        ),
+                        symbol('.')
+                    ), 3, 3
+                ),
+                union(
+                    concatenation(symbol('2'), symbol('5'), anySymbol('0', '1', '2', '3', '4', '5')),
+                    concatenation(symbol('2'), anySymbol('0', '1', '2', '3', '4'), digits),
+                    concatenation(symbol('1'), digits, digits),
+                    concatenation(
+                        Repeat(anySymbol('1', '2', '3', '4', '5', '6', '7', '8', '9'), 0, 1),
+                        digits
+                    ),
+                )
+            ), parse(
+                """((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])"""
+            )
+        )
+    }
+
+    @Test
+    fun ipV4regex_2() {
+        assertEquals(
+            concatenation(
+                Repeat(
+                    concatenation(
+                        union(
+                            concatenation(symbol('2'), symbol('5'), anySymbol('0', '1', '2', '3', '4', '5')),
+                            concatenation(symbol('2'), anySymbol('0', '1', '2', '3', '4'), DigitSymbol),
+                            concatenation(symbol('1'), DigitSymbol, DigitSymbol),
+                            concatenation(
+                                Repeat(anySymbol('1', '2', '3', '4', '5', '6', '7', '8', '9'), 0, 1),
+                                DigitSymbol
+                            ),
+                        ),
+                        symbol('.')
+                    ), 3, 3
+                ),
+                union(
+                    concatenation(symbol('2'), symbol('5'), anySymbol('0', '1', '2', '3', '4', '5')),
+                    concatenation(symbol('2'), anySymbol('0', '1', '2', '3', '4'), DigitSymbol),
+                    concatenation(symbol('1'), DigitSymbol, DigitSymbol),
+                    concatenation(
+                        Repeat(anySymbol('1', '2', '3', '4', '5', '6', '7', '8', '9'), 0, 1),
+                        DigitSymbol
+                    ),
+                )
+            ), parse(
+                """((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)"""
+            )
+        )
+    }
+
+    @Test
+    fun emailRegexSimple() {
+        assertEquals(
+            concatenation(
+                StartOfLine,
+                Repeat(
+                    anySymbol(
+                        'A', 'a', 'B', 'b', 'C', 'c', 'D', 'd', 'E', 'e', 'F', 'f', 'G', 'g', 'H', 'h', 'I', 'i',
+                        'J', 'j', 'K', 'k', 'L', 'l', 'M', 'm', 'N', 'n', 'O', 'o', 'P', 'p', 'Q', 'q', 'R', 'r',
+                        'S', 's', 'T', 't', 'U', 'u', 'V', 'v', 'W', 'w', 'X', 'x', 'Y', 'y', 'Z', 'z',
+                        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+                        '_', '.', '+', '-'
+                    ), 1, null
+                ),
+                symbol('@'),
+                Repeat(
+                    anySymbol(
+                        'A', 'a', 'B', 'b', 'C', 'c', 'D', 'd', 'E', 'e', 'F', 'f', 'G', 'g', 'H', 'h', 'I', 'i',
+                        'J', 'j', 'K', 'k', 'L', 'l', 'M', 'm', 'N', 'n', 'O', 'o', 'P', 'p', 'Q', 'q', 'R', 'r',
+                        'S', 's', 'T', 't', 'U', 'u', 'V', 'v', 'W', 'w', 'X', 'x', 'Y', 'y', 'Z', 'z',
+                        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+                        '-'
+                    ), 1, null
+                ),
+                symbol('.'),
+                Repeat(
+                    anySymbol(
+                        'A', 'a', 'B', 'b', 'C', 'c', 'D', 'd', 'E', 'e', 'F', 'f', 'G', 'g', 'H', 'h', 'I', 'i',
+                        'J', 'j', 'K', 'k', 'L', 'l', 'M', 'm', 'N', 'n', 'O', 'o', 'P', 'p', 'Q', 'q', 'R', 'r',
+                        'S', 's', 'T', 't', 'U', 'u', 'V', 'v', 'W', 'w', 'X', 'x', 'Y', 'y', 'Z', 'z',
+                        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+                        '-', '.'
+                    ), 1, null
+                ),
+                EndOfLine
+            ), parse(
+                """^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+${'$'}"""
+            )
+        )
     }
 }
