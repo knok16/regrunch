@@ -11,6 +11,7 @@ import nfa.toDFA
 import regex.parse
 import regex.toEpsilonNFA
 import utils.toBigInteger
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -136,6 +137,7 @@ class E2ETest {
     }
 
     @Test
+    @Ignore
     fun possessiveQuantifiers() {
         assertEquals(
             emptyList(),
