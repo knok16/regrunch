@@ -1,5 +1,8 @@
 package regex
 
+import dfa.allStringsAlphabetically
+import epsilonnfa.toNFA
+import nfa.toDFA
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -126,31 +129,23 @@ class ParserTest {
     }
 
     @Test
-    fun unionNoLeftOperand() {
-        assertFailsWith<ParseException> {
-            parse("""|b""")
-        }.let {
-            assertEquals(ParseException("No left operand", 0), it)
-        }
-        assertFailsWith<ParseException> {
-            parse("""ab(|c)""")
-        }.let {
-            assertEquals(ParseException("No left operand", 3), it)
-        }
+    fun unionEmptyLeftOperand() {
+        assertEquals(union(concatenation(), symbol('b')), parse("""|b"""))
+        assertEquals(concatenation(symbol('a'), symbol('b'), union(concatenation(), symbol('c'))), parse("""ab(|c)"""))
     }
 
     @Test
-    fun unionNoRightOperand() {
-        assertFailsWith<ParseException> {
-            parse("""b|""")
-        }.let {
-            assertEquals(ParseException("No right operand", 1), it)
-        }
-        assertFailsWith<ParseException> {
-            parse("""(a|)bc""")
-        }.let {
-            assertEquals(ParseException("No right operand", 2), it)
-        }
+    fun unionEmptyRightOperand() {
+        assertEquals(union(symbol('b'), concatenation()), parse("""b|"""))
+        assertEquals(concatenation(symbol('a'), symbol('b'), union(symbol('c'), concatenation())), parse("""ab(c|)"""))
+    }
+
+    @Test
+    fun unionEmptyBothOperands() {
+        assertEquals(concatenation(), parse("""|"""))
+        assertEquals(concatenation(), parse("""(|)"""))
+        assertEquals(concatenation(), parse("""||||||"""))
+        assertEquals(concatenation(symbol('a'), symbol('b')), parse("""ab(|)"""))
     }
 
     @Test
@@ -160,21 +155,26 @@ class ParserTest {
 
     @Test
     fun kleeneStarNoOperand() {
-        assertFailsWith<ParseException> {
-            parse("""*b""")
-        }.let {
-            assertEquals(ParseException("No operand", 0), it)
-        }
-        assertFailsWith<ParseException> {
-            parse("""ab(*c)""")
-        }.let {
-            assertEquals(ParseException("No operand", 3), it)
-        }
-        assertFailsWith<ParseException> {
-            parse("""ab(c|*)""")
-        }.let {
-            assertEquals(ParseException("No operand", 5), it)
-        }
+        assertException(
+            setOf("(|*b"),
+            ParseException("No operand for repeat operator", 2)
+        )
+        assertException(
+            setOf("*b", "*", "*(|*", "*(|a", "*))a", "*))|", "*a(*", "*a*a", "*|", "*|*(", "*|**", "*||a", "*|||"),
+            ParseException("No operand for repeat operator", 0)
+        )
+        assertException(
+            setOf("(*", "(*(", "(*((", "(*()", "(**", "(**(", "(*a|", "(*|", "(*|(", "(*|)", "(*|*", "(*|a", "(*||"),
+            ParseException("No operand for repeat operator", 1)
+        )
+        assertException(
+            setOf("((*", "((*(", "((*)", "((**", "((*a", "((*|", "a(*", "a(*(", "a(*)", "a(**", "a(*a", "a(*|"),
+            ParseException("No operand for repeat operator", 2)
+        )
+        assertException(
+            setOf("ab(*c)", "(((*", "(a(*", "a((*", "a*(*", "aa(*", "a|(*"),
+            ParseException("No operand for repeat operator", 3)
+        )
     }
 
     @Test
@@ -187,17 +187,17 @@ class ParserTest {
         assertFailsWith<ParseException> {
             parse("""+b""")
         }.let {
-            assertEquals(ParseException("No operand", 0), it)
+            assertEquals(ParseException("No operand for repeat operator", 0), it)
         }
         assertFailsWith<ParseException> {
             parse("""ab(+c)""")
         }.let {
-            assertEquals(ParseException("No operand", 3), it)
+            assertEquals(ParseException("No operand for repeat operator", 3), it)
         }
         assertFailsWith<ParseException> {
             parse("""ab(c|+)""")
         }.let {
-            assertEquals(ParseException("No operand", 5), it)
+            assertEquals(ParseException("No operand for repeat operator", 5), it)
         }
     }
 
@@ -211,17 +211,17 @@ class ParserTest {
         assertFailsWith<ParseException> {
             parse("""?b""")
         }.let {
-            assertEquals(ParseException("No operand", 0), it)
+            assertEquals(ParseException("No operand for repeat operator", 0), it)
         }
         assertFailsWith<ParseException> {
             parse("""ab(?c)""")
         }.let {
-            assertEquals(ParseException("No operand", 3), it)
+            assertEquals(ParseException("No operand for repeat operator", 3), it)
         }
         assertFailsWith<ParseException> {
             parse("""ab(c|?)""")
         }.let {
-            assertEquals(ParseException("No operand", 5), it)
+            assertEquals(ParseException("No operand for repeat operator", 5), it)
         }
     }
 
@@ -246,13 +246,28 @@ class ParserTest {
     @Test
     fun severalRepeatOperators() {
         assertEquals(
-            Repeat(Repeat(Repeat(symbol('a'), 0, null, Repeat.Type.POSSESSIVE), 0, 1), 2, 2),
-            parse("""a*+?{2}""")
-        )
-
-        assertEquals(
             Repeat(Repeat(Repeat(Repeat(symbol('a'), 0, null), 1, null), 0, 1), 2, 2),
-            parse("""((a*)+)?{2}""")
+            parse("""(((a*)+)?){2}""")
+        )
+    }
+
+    @Test
+    fun quantifierAfterQuantifier() {
+        assertEquals(
+            ParseException("No operand for repeat operator", 2),
+            assertFailsWith<ParseException> { parse("""a**""") }
+        )
+        assertEquals(
+            ParseException("No operand for repeat operator", 3),
+            assertFailsWith<ParseException> { parse("""a*+?{2}""") }
+        )
+        assertEquals(
+            ParseException("No operand for repeat operator", 4, 6),
+            assertFailsWith<ParseException> { parse("""a{2}{3}""") }
+        )
+        assertEquals(
+            ParseException("No operand for repeat operator", 2),
+            assertFailsWith<ParseException> { parse("""a+*""") }
         )
     }
 
@@ -363,17 +378,17 @@ class ParserTest {
         assertFailsWith<ParseException> {
             parse("""{2}b""")
         }.let {
-            assertEquals(ParseException("No operand", 0, 2), it)
+            assertEquals(ParseException("No operand for repeat operator", 0, 2), it)
         }
         assertFailsWith<ParseException> {
             parse("""ab({3,7}c)""")
         }.let {
-            assertEquals(ParseException("No operand", 3, 7), it)
+            assertEquals(ParseException("No operand for repeat operator", 3, 7), it)
         }
         assertFailsWith<ParseException> {
             parse("""ab(c|{3,7})""")
         }.let {
-            assertEquals(ParseException("No operand", 5, 9), it)
+            assertEquals(ParseException("No operand for repeat operator", 5, 9), it)
         }
     }
 
@@ -437,20 +452,56 @@ class ParserTest {
 
     @Test
     fun unbalancedLeftBracket() {
-        assertFailsWith<ParseException> {
-            parse("""ab(cd(e|f)g""")
-        }.let {
-            assertEquals(ParseException("Unbalanced left bracket", 2), it)
-        }
+        assertException(
+            setOf("(", "((a)", "(a", "(a*", "(a*a", "(aa", "(aa*", "(aaa", "(a|a"),
+            ParseException("Unbalanced left bracket", 0)
+        )
+        assertException(
+            setOf("((", "a(", "((a", "((a*", "((aa", "a(a", "a(a*", "a(aa"),
+            ParseException("Unbalanced left bracket", 1)
+        )
+        assertException(
+            setOf("ab(cd(e|f)g", "(((a", "(a(a", "a((a", "a*(a", "aa(a", "a|(a", "(((", "a((", "a*(", "a|("),
+            ParseException("Unbalanced left bracket", 2)
+        )
+        assertException(
+            setOf("(a|(", "a(((", "a(a(", "aa((", "aa*(", "aaa(", "aa|("),
+            ParseException("Unbalanced left bracket", 3)
+        )
     }
 
     @Test
     fun unbalancedRightBracket() {
-        assertFailsWith<ParseException> {
-            parse("""ab(c|d)e)f)g""")
-        }.let {
-            assertEquals(ParseException("Unbalanced right bracket", 8), it)
-        }
+        assertException(
+            setOf(")", ")(", ")((", ")(((", ")))a", "))|", ")*)(", ")*a*", ")a(|", ")aa", ")|()", ")|*a", ")|||"),
+            ParseException("Unbalanced right bracket", 0)
+        )
+        assertException(
+            setOf("a)", "a)(", "a)((", "a)()", "a))a", "a)a)", "a)a*", "a)aa", "a)a|", "a)|", "a)|*", "a)|a", "a)||"),
+            ParseException("Unbalanced right bracket", 1)
+        )
+        assertException(
+            setOf("a*)", "a*)(", "a*))", "a*)*", "a*)a", "a*)|", "aa)", "aa)(", "aa))", "aa)*", "aa)a", "aa)|"),
+            ParseException("Unbalanced right bracket", 2)
+        )
+        assertException(
+            setOf("(a))", "a*a)", "aa*)", "aaa)", "a|a)"),
+            ParseException("Unbalanced right bracket", 3)
+        )
+        assertException(
+            setOf("ab(c|d)e)f)g"),
+            ParseException("Unbalanced right bracket", 8)
+        )
+    }
+
+    @Test
+    fun emptyBrackets() {
+        assertEquals(concatenation("abcdef"), parse("""abc()def"""))
+        assertEquals(concatenation(), parse("""()"""))
+        assertEquals(concatenation(), parse("""(((()())()(()())))"""))
+        assertEquals(concatenation(), parse("""(( ))"""))
+        assertEquals(concatenation(), parse("""(( ))||((|))"""))
+        assertEquals(union(symbol('a'), concatenation()), parse("""a|(())"""))
     }
 
     @Test
@@ -1055,5 +1106,34 @@ class ParserTest {
                 """^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+${'$'}"""
             )
         )
+    }
+
+    @Test
+    fun crossTestWithKotlinParser() {
+        parse("""[()*?|a\\]{0,5}""")
+            .toEpsilonNFA(setOf('(', ')', '*', '|') + ('a'..'z').toSet())
+            .toNFA()
+            .toDFA()
+            .allStringsAlphabetically()
+            .forEach { regex ->
+                val expected = try {
+                    Regex(regex)
+                    true
+                } catch (e: IllegalArgumentException) {
+                    false
+                }
+                val actual = try {
+                    parse(regex)
+                    true
+                } catch (e: ParseException) {
+                    false
+                }
+                assertEquals(expected, actual, regex)
+            }
+    }
+
+    private fun assertException(regexes: Set<String>, expectedException: Exception) = regexes.forEach { regex ->
+        assertEquals(expectedException, assertFailsWith<ParseException> { parse(regex) })
+        assertFailsWith<IllegalArgumentException> { Regex(regex).matches("") }
     }
 }

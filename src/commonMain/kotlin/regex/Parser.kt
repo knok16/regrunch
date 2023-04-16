@@ -1,9 +1,5 @@
 package regex
 
-import utils.Stack
-import utils.isEmpty
-import utils.isNotEmpty
-
 data class ParseException(override val message: String, val fromIndex: Int, val toIndex: Int) : Exception(message) {
     constructor(message: String, at: Int) : this(message, at, at)
 }
@@ -180,7 +176,6 @@ internal fun parseRepeatNotation(reader: Reader): RepeatOperator {
 
 internal sealed interface Token
 internal data class UnionOperator(val at: Int) : Token
-object ConcatenationOperator : Token
 internal data class RepeatOperator(
     val min: Int,
     val max: Int?,
@@ -217,99 +212,71 @@ internal fun tokenize(str: String): List<Token> {
             else -> if (char.isWhitespace()) continue else SymbolToken(ExactSymbol(char))
         }
 
-        if (result.isNotEmpty() &&
-            (result.last() is RepeatOperator || result.last() is SymbolToken || result.last() is RightBracket) &&
-            (token is SymbolToken || token is LeftBracket)
-        )
-            result.add(ConcatenationOperator)
         result.add(token)
     }
 
     return result
 }
 
-internal fun concatenate(left: RegexPart, right: RegexPart): RegexPart = Concatenation(
-    (if (left is Concatenation) left.parts else listOf(left)) +
-            (if (right is Concatenation) right.parts else listOf(right))
-)
+internal class RecursiveDescentParser(private val tokens: List<Token>) {
+    private var cursor: Int = 0
 
-internal fun union(left: RegexPart, right: RegexPart): RegexPart = Union(
-    (if (left is Union) left.parts else setOf(left)) +
-            (if (right is Union) right.parts else setOf(right))
-)
-
-fun parse(str: String): RegexPart {
-    val tokens = tokenize(str)
-
-    if (tokens.isEmpty()) return Concatenation(emptyList())
-
-    val results = Stack<RegexPart>()
-    val operatorStack = Stack<Token>()
-
-    fun applyOperator(operator: Token) {
-        when (operator) {
-            is RepeatOperator -> {
-                if (results.isEmpty()) {
-                    throw ParseException("No operand", operator.fromIndex, operator.toIndex)
-                }
-                results.push(Repeat(results.pop(), operator.min, operator.max, operator.type))
-            }
-
-            is ConcatenationOperator -> {
-                val operand2 = results.pop() // TODO add error handling?
-                val operand1 = results.pop() // TODO add error handling?
-
-                results.push(concatenate(operand1, operand2))
-            }
-
-            is UnionOperator -> {
-                val operand2 = results.pop() // TODO add error handling?
-                val operand1 = results.pop() // TODO add error handling?
-                results.push(union(operand1, operand2))
-            }
-
-            else -> throw IllegalArgumentException() // TODO
+    fun parse(): RegexPart {
+        val result = parsePartsUnion()
+        return when (val it = peek()) {
+            null -> result
+            is RightBracket -> throw ParseException("Unbalanced right bracket", it.at)
+            is RepeatOperator -> throw ParseException("No operand for repeat operator", it.fromIndex, it.toIndex)
+            else -> throw RuntimeException("Unexpected token in queue, got '$it'")
         }
     }
 
-    for (token in tokens) {
-        when (token) {
-            is UnionOperator -> {
-                while (operatorStack.isNotEmpty() && (operatorStack.peek() is ConcatenationOperator || operatorStack.peek() is UnionOperator)) {
-                    applyOperator(operatorStack.pop())
-                }
-                operatorStack.push(token)
-            }
+    private fun peek(): Token? = if (cursor in tokens.indices) tokens[cursor] else null
 
-            is ConcatenationOperator -> {
-                while (operatorStack.isNotEmpty() && operatorStack.peek() is ConcatenationOperator) {
-                    applyOperator(operatorStack.pop())
-                }
-                operatorStack.push(token)
-            }
+    private fun next(): Token? = if (cursor in tokens.indices) tokens[cursor++] else null
 
-            is RepeatOperator -> applyOperator(token)
-            is SymbolToken -> results.push(token.symbol)
-            is LeftBracket -> operatorStack.push(token)
-            is RightBracket -> {
-                while (operatorStack.isNotEmpty() && operatorStack.peek() !is LeftBracket) {
-                    applyOperator(operatorStack.pop())
-                }
-                if (operatorStack.isEmpty() || operatorStack.pop() !is LeftBracket) {
-                    throw ParseException("Unbalanced right bracket", token.at)
-                }
-            }
+    private fun parsePartsUnion(): RegexPart {
+        val parts = mutableSetOf(parsePartsConcatenation())
+        while (peek() is UnionOperator) {
+            next() // pop union operator
+            parts.add(parsePartsConcatenation())
         }
+        return parts.singleOrNull() ?: Union(parts.flatMap { if (it is Union) it.parts else listOf(it) }.toSet())
     }
 
-    while (operatorStack.isNotEmpty()) {
-        val token = operatorStack.pop()
-        if (token is LeftBracket) {
-            throw ParseException("Unbalanced left bracket", token.at)
-        } else {
-            applyOperator(token)
-        }
+    private fun parsePartsConcatenation(): RegexPart {
+        val parts = mutableListOf<RegexPart>()
+
+        while (peek() is SymbolToken || peek() is LeftBracket) parts.add(parsePartsRepeats())
+
+        return parts.singleOrNull()
+            ?: Concatenation(parts.flatMap { if (it is Concatenation) it.parts else listOf(it) })
     }
 
-    return results.pop()
+    private fun parsePartsRepeats(): RegexPart {
+        val part = parseSingleSymbolOrRegexInBrackets()
+        return (peek() as? RepeatOperator)?.let { operator ->
+            next() // pop repeat operator
+            Repeat(part, operator.min, operator.max, operator.type)
+        } ?: part
+    }
+
+    private fun parseSingleSymbolOrRegexInBrackets(): RegexPart {
+        return when (val next = next()) {
+            is SymbolToken -> next.symbol
+            is LeftBracket -> {
+                val result = parsePartsUnion()
+                when (val p = next()) {
+                    is RightBracket -> result
+                    is RepeatOperator -> throw ParseException("No operand for repeat operator", p.fromIndex, p.toIndex)
+                    else -> throw ParseException("Unbalanced left bracket", next.at)
+                }
+            }
+
+            else -> throw RuntimeException("Unexpected token in queue, got '$next'")
+        }
+    }
 }
+
+fun parse(str: String): RegexPart =
+    RecursiveDescentParser(tokenize(str)).parse()
