@@ -4,7 +4,7 @@ data class ParseException(override val message: String, val fromIndex: Int, val 
     constructor(message: String, at: Int) : this(message, at, at)
 }
 
-internal class Reader(private val str: String) {
+private class Reader(private val str: String) {
     private var i = 0
     fun next(): Char? = if (i < str.length) str[i++] else null
     fun peek(): Char? = if (i < str.length) str[i] else null
@@ -12,7 +12,7 @@ internal class Reader(private val str: String) {
     fun prevCursor(): Int = i - 1 // TODO ?
 }
 
-internal fun Reader.readHexDigit(): Int =
+private fun Reader.readHexDigit(): Int =
     when (val char = next() ?: throw ParseException("Expected hexadecimal digit but got end of input", cursor())) {
         in '0'..'9' -> char - '0'
         in 'A'..'F' -> char - 'A' + 10
@@ -23,7 +23,7 @@ internal fun Reader.readHexDigit(): Int =
         )
     }
 
-internal fun Reader.readRepeatType(): Repeat.Type = when (peek()) {
+private fun Reader.readRepeatType(): Repeat.Type = when (peek()) {
     '?' -> {
         next()
         Repeat.Type.LAZY
@@ -37,7 +37,7 @@ internal fun Reader.readRepeatType(): Repeat.Type = when (peek()) {
     else -> Repeat.Type.GREEDY
 }
 
-internal fun parseEscapedCharacter(reader: Reader, forSetNotation: Boolean): Symbol =
+private fun parseEscapedCharacter(reader: Reader, forSetNotation: Boolean): Symbol =
     when (val char = reader.next()) {
         null -> throw ParseException("No character to escape", reader.prevCursor())
         'd' -> DigitSymbol
@@ -77,7 +77,7 @@ internal fun parseEscapedCharacter(reader: Reader, forSetNotation: Boolean): Sym
         else -> ExactSymbol(char)
     }
 
-internal fun parseSetNotation(reader: Reader): SetNotationSymbol {
+private fun parseSetNotation(reader: Reader): SetNotationSymbol {
     val initialCursor = reader.prevCursor()
     val symbols = HashSet<Symbol>()
     val negate = reader.peek() == '^'
@@ -118,13 +118,13 @@ internal fun parseSetNotation(reader: Reader): SetNotationSymbol {
     return SetNotationSymbol(symbols, negate)
 }
 
-internal fun Reader.readDecimalDigit(): Int =
+private fun Reader.readDecimalDigit(): Int =
     when (val char = next() ?: throw ParseException("Expected decimal digit but got end of input", cursor())) {
         in '0'..'9' -> char - '0'
         else -> throw ParseException("Expected decimal digit but got '$char'", prevCursor())
     }
 
-internal fun Reader.readDecimalNumber(): Int {
+private fun Reader.readDecimalNumber(): Int {
     var result = readDecimalDigit()
     while (peek() in '0'..'9') {
         result = result * 10 + readDecimalDigit()
@@ -132,11 +132,11 @@ internal fun Reader.readDecimalNumber(): Int {
     return result
 }
 
-internal fun Reader.skipWhitespaces() {
+private fun Reader.skipWhitespaces() {
     while (peek()?.isWhitespace() == true) next()
 }
 
-internal fun parseRepeatNotation(reader: Reader): RepeatOperator {
+private fun parseRepeatNotation(reader: Reader): RepeatOperator {
     val initialCursor = reader.prevCursor()
 
     reader.skipWhitespaces()
@@ -174,9 +174,9 @@ internal fun parseRepeatNotation(reader: Reader): RepeatOperator {
     return RepeatOperator(min, max, reader.readRepeatType(), initialCursor, reader.prevCursor())
 }
 
-internal sealed interface Token
-internal data class UnionOperator(val at: Int) : Token
-internal data class RepeatOperator(
+private sealed interface Token
+private data class UnionOperator(val at: Int) : Token
+private data class RepeatOperator(
     val min: Int,
     val max: Int?,
     val type: Repeat.Type,
@@ -184,11 +184,11 @@ internal data class RepeatOperator(
     val toIndex: Int
 ) : Token
 
-internal data class SymbolToken(val symbol: Symbol) : Token
-internal data class LeftBracket(val at: Int) : Token
-internal data class RightBracket(val at: Int) : Token
+private data class SymbolToken(val symbol: Symbol) : Token
+private data class LeftBracket(val at: Int) : Token
+private data class RightBracket(val at: Int) : Token
 
-internal fun tokenize(str: String): List<Token> {
+private fun tokenize(str: String): List<Token> {
     val reader = Reader(str)
 
     val result = ArrayList<Token>()
@@ -218,7 +218,7 @@ internal fun tokenize(str: String): List<Token> {
     return result
 }
 
-internal class RecursiveDescentParser(private val tokens: List<Token>) {
+private class RecursiveDescentParser(private val tokens: List<Token>) {
     private var cursor: Int = 0
 
     fun parse(): RegexPart {
