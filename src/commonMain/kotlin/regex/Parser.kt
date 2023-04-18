@@ -174,6 +174,7 @@ private fun parseRepeatNotation(reader: Reader): RepeatOperator {
     return RepeatOperator(min, max, reader.readRepeatType(), initialCursor, reader.prevCursor())
 }
 
+// TODO move from and to fields here?
 private sealed interface Token
 private data class UnionOperator(val at: Int) : Token
 private data class RepeatOperator(
@@ -185,13 +186,24 @@ private data class RepeatOperator(
 ) : Token
 
 private data class SymbolToken(val symbol: Symbol) : Token
-private data class LeftBracket(val at: Int) : Token
+private sealed interface LeftBracket : Token {
+    val from: Int
+    val to: Int
+}
+
+private data class NonCapturingGroupStart(override val from: Int, override val to: Int) : LeftBracket
+private data class CapturingGroupStart(val groupNumber: Int, val at: Int) : LeftBracket {
+    override val from: Int get() = at
+    override val to: Int get() = at
+}
+
 private data class RightBracket(val at: Int) : Token
 
 private fun tokenize(str: String): List<Token> {
     val reader = Reader(str)
 
     val result = ArrayList<Token>()
+    var lastCapturingGroupNumber = 0
 
     while (true) {
         val cursor = reader.cursor()
@@ -204,7 +216,15 @@ private fun tokenize(str: String): List<Token> {
             '+' -> RepeatOperator(1, null, reader.readRepeatType(), cursor, cursor)
             '?' -> RepeatOperator(0, 1, reader.readRepeatType(), cursor, cursor)
             '{' -> parseRepeatNotation(reader)
-            '(' -> LeftBracket(cursor)
+            '(' -> if (reader.peek() == '?') {
+                reader.next() // pop question mark
+                when (val next = reader.next()) {
+                    ':' -> NonCapturingGroupStart(cursor, reader.prevCursor())
+                    // TODO add support of lookahead/lookbehind and atomic groups
+                    else -> throw ParseException("Expected ':', but got '$next'", reader.prevCursor())
+                }
+            } else CapturingGroupStart(++lastCapturingGroupNumber, cursor)
+
             ')' -> RightBracket(cursor)
             '.' -> SymbolToken(AnySymbol)
             '^' -> SymbolToken(StartOfLine)
@@ -267,9 +287,13 @@ private class RecursiveDescentParser(private val tokens: List<Token>) {
             is LeftBracket -> {
                 val result = parsePartsUnion()
                 when (val p = next()) {
-                    is RightBracket -> result
+                    is RightBracket -> when (next) {
+                        is NonCapturingGroupStart -> result
+                        is CapturingGroupStart -> CaptureGroup(result, next.groupNumber)
+                    }
+
                     is RepeatOperator -> throw ParseException("No operand for repeat operator", p.fromIndex, p.toIndex)
-                    else -> throw ParseException("Unbalanced left bracket", next.at)
+                    else -> throw ParseException("Unbalanced left bracket", next.from, next.to)
                 }
             }
 

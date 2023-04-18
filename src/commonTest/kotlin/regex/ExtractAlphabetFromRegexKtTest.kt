@@ -20,7 +20,7 @@ class ExtractAlphabetFromRegexKtTest {
                                 SetNotationSymbol(setOf(ExactSymbol('e'), ExactSymbol('f'), ExactSymbol('a')))
                             )
                         ),
-                        ExactSymbol('b'),
+                        CaptureGroup(ExactSymbol('b'), 1),
                         ExactSymbol('a'),
                         EndOfLine
                     )
@@ -45,7 +45,7 @@ class ExtractAlphabetFromRegexKtTest {
                                     SetNotationSymbol(setOf(ExactSymbol('e'), ExactSymbol('a')), negated = true)
                                 )
                             ),
-                            ExactSymbol('b'),
+                            CaptureGroup(ExactSymbol('b'), 1),
                             ExactSymbol('a'),
                             EndOfLine
                         )
@@ -72,7 +72,7 @@ class ExtractAlphabetFromRegexKtTest {
                                     SetNotationSymbol(setOf(ExactSymbol('e'), ExactSymbol('a')))
                                 )
                             ),
-                            ExactSymbol('b'),
+                            CaptureGroup(ExactSymbol('b'), 1),
                             ExactSymbol('a'),
                             EndOfLine
                         )

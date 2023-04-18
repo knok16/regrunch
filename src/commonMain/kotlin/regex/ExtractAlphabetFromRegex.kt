@@ -25,6 +25,7 @@ fun extractAlphabet(regexPart: RegexPart): Set<Char> = when (regexPart) {
     else throw IllegalArgumentException("Negated character class is used in regex, it is not possible to pinpoint exact symbol set that should be used")
 
     is Anchor -> emptySet()
+    is CaptureGroup -> extractAlphabet(regexPart.part)
     is Concatenation -> regexPart.parts.flatMap { extractAlphabet(it) }.toSet()
     is Union -> regexPart.parts.flatMap { extractAlphabet(it) }.toSet()
     is Repeat -> extractAlphabet(regexPart.part)

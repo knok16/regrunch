@@ -110,6 +110,8 @@ internal fun convert(regexPart: RegexPart, builder: EpsilonNFABuilder<Char>, alp
 
             start to finish
         }
+
+        is CaptureGroup -> convert(regexPart.part, builder, alphabet)
     }
 }
 

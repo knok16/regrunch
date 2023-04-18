@@ -131,21 +131,27 @@ class ParserTest {
     @Test
     fun unionEmptyLeftOperand() {
         assertEquals(union(concatenation(), symbol('b')), parse("""|b"""))
-        assertEquals(concatenation(symbol('a'), symbol('b'), union(concatenation(), symbol('c'))), parse("""ab(|c)"""))
+        assertEquals(
+            concatenation(symbol('a'), symbol('b'), union(concatenation(), symbol('c'))),
+            parse("""ab(?:|c)""")
+        )
     }
 
     @Test
     fun unionEmptyRightOperand() {
         assertEquals(union(symbol('b'), concatenation()), parse("""b|"""))
-        assertEquals(concatenation(symbol('a'), symbol('b'), union(symbol('c'), concatenation())), parse("""ab(c|)"""))
+        assertEquals(
+            concatenation(symbol('a'), symbol('b'), union(symbol('c'), concatenation())),
+            parse("""ab(?:c|)""")
+        )
     }
 
     @Test
     fun unionEmptyBothOperands() {
         assertEquals(concatenation(), parse("""|"""))
-        assertEquals(concatenation(), parse("""(|)"""))
+        assertEquals(concatenation(), parse("""(?:|)"""))
         assertEquals(concatenation(), parse("""||||||"""))
-        assertEquals(concatenation(symbol('a'), symbol('b')), parse("""ab(|)"""))
+        assertEquals(concatenation(symbol('a'), symbol('b')), parse("""ab(?:|)"""))
     }
 
     @Test
@@ -214,14 +220,18 @@ class ParserTest {
             assertEquals(ParseException("No operand for repeat operator", 0), it)
         }
         assertFailsWith<ParseException> {
-            parse("""ab(?c)""")
-        }.let {
-            assertEquals(ParseException("No operand for repeat operator", 3), it)
-        }
-        assertFailsWith<ParseException> {
             parse("""ab(c|?)""")
         }.let {
             assertEquals(ParseException("No operand for repeat operator", 5), it)
+        }
+    }
+
+    @Test
+    fun halfOfNonCaptureGroupStartToken() {
+        assertFailsWith<ParseException> {
+            parse("""ab(?c)""")
+        }.let {
+            assertEquals(ParseException("Expected ':', but got 'c'", 4), it)
         }
     }
 
@@ -247,7 +257,7 @@ class ParserTest {
     fun severalRepeatOperators() {
         assertEquals(
             Repeat(Repeat(Repeat(Repeat(symbol('a'), 0, null), 1, null), 0, 1), 2, 2),
-            parse("""(((a*)+)?){2}""")
+            parse("""(?:(?:(?:a*)+)?){2}""")
         )
     }
 
@@ -446,7 +456,7 @@ class ParserTest {
     fun bracketsTest() {
         assertEquals(
             concatenation(symbol('a'), union(symbol('b'), symbol('c')), union(symbol('d'), symbol('e'))),
-            parse("a((b|c)(d|e))")
+            parse("a(?:(?:b|c)(?:d|e))")
         )
     }
 
@@ -457,16 +467,16 @@ class ParserTest {
             ParseException("Unbalanced left bracket", 0)
         )
         assertException(
-            setOf("((", "a(", "((a", "((a*", "((aa", "a(a", "a(a*", "a(aa"),
-            ParseException("Unbalanced left bracket", 1)
+            setOf("((?:", "a(?:", "((?:a", "((?:a*", "((?:aa", "a(?:a", "a(?:a*", "a(?:aa"),
+            ParseException("Unbalanced left bracket", 1, 3)
         )
         assertException(
             setOf("ab(cd(e|f)g", "(((a", "(a(a", "a((a", "a*(a", "aa(a", "a|(a", "(((", "a((", "a*(", "a|("),
             ParseException("Unbalanced left bracket", 2)
         )
         assertException(
-            setOf("(a|(", "a(((", "a(a(", "aa((", "aa*(", "aaa(", "aa|("),
-            ParseException("Unbalanced left bracket", 3)
+            setOf("(a|(?:", "a(((?:", "a(a(?:", "aa((?:", "aa*(?:", "aaa(?:", "aa|(?:"),
+            ParseException("Unbalanced left bracket", 3, 5)
         )
     }
 
@@ -496,12 +506,12 @@ class ParserTest {
 
     @Test
     fun emptyBrackets() {
-        assertEquals(concatenation("abcdef"), parse("""abc()def"""))
-        assertEquals(concatenation(), parse("""()"""))
-        assertEquals(concatenation(), parse("""(((()())()(()())))"""))
-        assertEquals(concatenation(), parse("""(( ))"""))
-        assertEquals(concatenation(), parse("""(( ))||((|))"""))
-        assertEquals(union(symbol('a'), concatenation()), parse("""a|(())"""))
+        assertEquals(concatenation("abcdef"), parse("""abc(?:)def"""))
+        assertEquals(concatenation(), parse("""(?:)"""))
+        assertEquals(concatenation(), parse("""(?:(?:(?:(?:)(?:))(?:)(?:(?:)(?:))))"""))
+        assertEquals(concatenation(), parse("""(?:(?: ))"""))
+        assertEquals(concatenation(), parse("""(?:(?: ))||(?:(?:|))"""))
+        assertEquals(union(symbol('a'), concatenation()), parse("""a|(?:(?:))"""))
     }
 
     @Test
@@ -919,7 +929,7 @@ class ParserTest {
                     symbol('g')
                 )
             ),
-            parse("""(a|b|c)d(e|f|g)""")
+            parse("""(?:a|b|c)d(?:e|f|g)""")
         )
     }
 
@@ -935,13 +945,13 @@ class ParserTest {
             symbol('f'),
             symbol('g')
         )
-        assertEquals(expected, parse("""a|(b|c)de|(f)|g"""))
-        assertEquals(expected, parse("""(a|(b|c)de|(f)|g)"""))
-        assertEquals(expected, parse("""a|((b|c)de)|(f)|g"""))
-        assertEquals(expected, parse("""a|((b|c)de|(f))|g"""))
-        assertEquals(expected, parse("""a|(b|c)de|((f)|g)"""))
-        assertEquals(expected, parse("""a|((b|c)de|(f)|g)"""))
-        assertEquals(expected, parse("""((((a|(((b|(c)))de))|((f)|g))))"""))
+        assertEquals(expected, parse("""a|(?:b|c)de|(?:f)|g"""))
+        assertEquals(expected, parse("""(?:a|(?:b|c)de|(?:f)|g)"""))
+        assertEquals(expected, parse("""a|(?:(?:b|c)de)|(?:f)|g"""))
+        assertEquals(expected, parse("""a|(?:(?:b|c)de|(?:f))|g"""))
+        assertEquals(expected, parse("""a|(?:b|c)de|(?:(?:f)|g)"""))
+        assertEquals(expected, parse("""a|(?:(?:b|c)de|(?:f)|g)"""))
+        assertEquals(expected, parse("""(?:(?:(?:(?:a|(?:(?:(?:b|(?:c)))de))|(?:(?:f)|g))))"""))
     }
 
     @Test
@@ -956,13 +966,13 @@ class ParserTest {
             Repeat(Repeat(symbol('f'), 1, null), 1, null),
             symbol('g')
         )
-        assertEquals(expected, parse("""a|(b{2,}|c)*de?|(f+)+|g"""))
-        assertEquals(expected, parse("""(a|(b{2,}|c)*de?|(f+)+|g)"""))
-        assertEquals(expected, parse("""a|((b{2,}|c)*de?)|(f+)+|g"""))
-        assertEquals(expected, parse("""a|((b{2,}|c)*de?|(f+)+)|g"""))
-        assertEquals(expected, parse("""a|(b{2,}|c)*de?|((f+)+|g)"""))
-        assertEquals(expected, parse("""a|((b{2,}|c)*de?|(f+)+|g)"""))
-        assertEquals(expected, parse("""((((a|(((b{2,}|(c))*)d(e)?))|((f+)+|g))))"""))
+        assertEquals(expected, parse("""a|(?:b{2,}|c)*de?|(?:f+)+|g"""))
+        assertEquals(expected, parse("""(?:a|(?:b{2,}|c)*de?|(?:f+)+|g)"""))
+        assertEquals(expected, parse("""a|(?:(?:b{2,}|c)*de?)|(?:f+)+|g"""))
+        assertEquals(expected, parse("""a|(?:(?:b{2,}|c)*de?|(?:f+)+)|g"""))
+        assertEquals(expected, parse("""a|(?:b{2,}|c)*de?|(?:(?:f+)+|g)"""))
+        assertEquals(expected, parse("""a|(?:(?:b{2,}|c)*de?|(?:f+)+|g)"""))
+        assertEquals(expected, parse("""(?:(?:(?:(?:a|(?:(?:(?:b{2,}|(?:c))*)d(?:e)?))|(?:(?:f+)+|g))))"""))
     }
 
     @Test
@@ -1029,7 +1039,7 @@ class ParserTest {
                     ),
                 )
             ), parse(
-                """((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])"""
+                """(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])"""
             )
         )
     }
@@ -1062,7 +1072,7 @@ class ParserTest {
                     ),
                 )
             ), parse(
-                """((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)"""
+                """(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)"""
             )
         )
     }
@@ -1130,6 +1140,65 @@ class ParserTest {
                 }
                 assertEquals(expected, actual, regex)
             }
+    }
+
+    @Test
+    fun emptyCaptureGroups() {
+        assertEquals(union(CaptureGroup(concatenation(), 1), CaptureGroup(concatenation(), 2)), parse("""()|()"""))
+        assertEquals(CaptureGroup(concatenation(), 1), parse("""(|)"""))
+        assertEquals(concatenation(symbol('a'), symbol('b'), CaptureGroup(concatenation(), 1)), parse("""ab(|)"""))
+    }
+
+    @Test
+    fun simpleSingleCaptureGroup() {
+        assertEquals(
+            concatenation(symbol('a'), CaptureGroup(union(symbol('b'), symbol('c')), 1), symbol('d')),
+            parse("""a(b|c)d""")
+        )
+    }
+
+    @Test
+    fun severalCaptureGroups() {
+        assertEquals(
+            concatenation(
+                symbol('a'),
+                CaptureGroup(symbol('b'), 1),
+                symbol('c'),
+                CaptureGroup(symbol('d'), 2)
+            ),
+            parse("""a(b)c(d)""")
+        )
+    }
+
+    @Test
+    fun nestedCaptureGroups() {
+        assertEquals(CaptureGroup(CaptureGroup(concatenation(), 2), 1), parse("""(( ))"""))
+        assertEquals(
+            CaptureGroup(
+                concatenation(
+                    CaptureGroup(symbol('a'), 2),
+                    CaptureGroup(concatenation(symbol('b'), CaptureGroup(symbol('c'), 4)), 3)
+                ),
+                1
+            ),
+            parse("""((a)(b(c)))""")
+        )
+        assertEquals(
+            CaptureGroup(
+                Repeat(
+                    CaptureGroup(
+                        Repeat(
+                            CaptureGroup(
+                                Repeat(
+                                    CaptureGroup(Repeat(symbol('a'), 0, null), 4), 1, null
+                                ), 3
+                            ), 0, 1
+                        ), 2
+                    ), 2, 2
+                ), 1
+            ),
+            parse("""((((a*)+)?){2})""")
+        )
     }
 
     private fun assertException(regexes: Set<String>, expectedException: Exception) = regexes.forEach { regex ->

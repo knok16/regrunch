@@ -17,6 +17,8 @@ data class Repeat(val part: RegexPart, val min: Int, val max: Int?, val type: Ty
 
 data class Union(val parts: Set<RegexPart>) : RegexPart
 
+data class CaptureGroup(val part: RegexPart, val number: Int) : RegexPart
+
 sealed interface Symbol : RegexPart
 
 @JvmInline
