@@ -49,7 +49,7 @@ class ParserTest {
         assertEquals(SetNotationSymbol(symbols('a', '\n', 'b')), parse("""[a\nb]"""))
         assertEquals(SetNotationSymbol(symbols('a', 0x0B.toChar(), 'b')), parse("""[a\vb]"""))
         assertEquals(SetNotationSymbol(symbols('a', 0x07.toChar(), 'b')), parse("""[a\ab]"""))
-        assertEquals(SetNotationSymbol(symbols('a', 0x10.toChar(), 'b')), parse("""[a\bb]"""))
+        assertEquals(SetNotationSymbol(symbols('a', 0x08.toChar(), 'b')), parse("""[a\bb]"""))
         assertEquals(SetNotationSymbol(symbols('a', 0x1B.toChar(), 'b')), parse("""[a\eb]"""))
         assertEquals(SetNotationSymbol(symbols('a', 0x0C.toChar(), 'b')), parse("""[a\fb]"""))
     }

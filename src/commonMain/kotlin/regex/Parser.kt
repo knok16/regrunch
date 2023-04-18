@@ -51,7 +51,7 @@ private fun parseEscapedCharacter(reader: Reader, forSetNotation: Boolean): Symb
         'n' -> ExactSymbol('\n')
         'v' -> ExactSymbol(0x0B.toChar())
         'a' -> ExactSymbol(0x07.toChar())
-        'b' -> if (forSetNotation) ExactSymbol(0x10.toChar()) else WordBoundary
+        'b' -> if (forSetNotation) ExactSymbol(0x08.toChar()) else WordBoundary
         'e' -> ExactSymbol(0x1B.toChar())
         'f' -> ExactSymbol(0x0C.toChar())
         'A' -> StartOfString
