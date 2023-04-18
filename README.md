@@ -38,6 +38,60 @@ Arguments:
   REGEX  Regex to generate strings
 ```
 
+### Supported regex constructs
+
+| Name                             | Example                                           | Is supported | Note                                                                                                             |
+|----------------------------------|---------------------------------------------------|--------------|------------------------------------------------------------------------------------------------------------------|
+| Concatenation                    | `abc`                                             | Yes          |                                                                                                                  |
+| Union                            | `a\|b`, `a\|`, `\|a`                              | Yes          |                                                                                                                  |
+| Quantifiers                      |
+| Kleene star                      | `a*`                                              | Yes          |                                                                                                                  |
+| Plus quantifier (1 or more)      | `a+`                                              | Yes          |                                                                                                                  |
+| Question mark (0 or 1)           | `a?`                                              | Yes          |                                                                                                                  |
+| Exact repeats                    | `a{2}`, `a{3,}`, `a{4,6}`                         | Yes          |                                                                                                                  |
+| Lazy quantifiers                 | `a*?`, `a+?`, `a??`, `a{2}?`, `a{3,}?`, `a{4,6}?` | Yes          |                                                                                                                  |
+| Possessive quantifiers           | `a*+`, `a+=`, `a?+`, `a{2}+`, `a{3,}+`, `a{4,6}+` | No           |                                                                                                                  |
+| Shorthand character classes      |
+| Dot character                    | `.`                                               | Yes          |                                                                                                                  |
+| Digit character                  | `\d`                                              | Yes          |                                                                                                                  |
+| Non-digit character              | `\D`                                              | Yes          |                                                                                                                  |
+| Whitespace character             | `\s`                                              | Yes          |                                                                                                                  |
+| Non-whitespace character         | `\S`                                              | Yes          |                                                                                                                  |
+| Word character                   | `\w`                                              | Yes          |                                                                                                                  |
+| Non-word character               | `\W`                                              | Yes          |                                                                                                                  |
+| Hexadecimal notation             | `\x3e`                                            | Yes          |                                                                                                                  |
+| Unicode notation                 | `\u003e`                                          | Yes          |                                                                                                                  |
+| Octal notation                   | `\044`                                            | No           | `\044` will be treated as simple character concatenation `044`                                                   |
+| Control character notation       | `\cA`, `\cb`,`\cf`                                | Yes          |                                                                                                                  |
+| \ escape                         | `\\`                                              | Yes          |                                                                                                                  |
+| Non-printable character          |
+| Tab character (0x09)             | `\t`                                              | Yes          |                                                                                                                  |
+| Carriage return character (0x0D) | `\r`                                              | Yes          |                                                                                                                  |
+| Line feed character (0x0A)       | `\n`                                              | Yes          |                                                                                                                  |
+| Vertical tab (0x0B)              | `\v`                                              | Yes          |                                                                                                                  |
+| Bell character (0x07)            | `\a`                                              | Yes          |                                                                                                                  |
+| Backspace character (0x08)       | `\b`                                              | Yes          | `\b` correspond to backspace character only when used in character class notation: `[\b]`                        |
+| Escape character (0x1B)          | `\e`                                              | Yes          |                                                                                                                  |
+| Form feed character (0x0C)       | `\f`                                              | Yes          |                                                                                                                  |
+| Character classes                | `[0248]`                                          | Yes          |                                                                                                                  |
+| Negation in character classes    | `[^0248]`                                         | Yes          |                                                                                                                  |
+| Ranges in character classes      | `[0-36-9b-d]`                                     | Yes          |                                                                                                                  |
+| Shorthands in character classes  | `[ab\d]`                                          | Yes          |                                                                                                                  |
+| Character class subtraction      | `[0-9-[0-6-[0-3]]]`                               | No           |                                                                                                                  |
+| Character class intersection     | `[0-9&&[0-6]&&[4-9]]`                             | No           |                                                                                                                  |
+| Capturing groups                 | `(\d\d)-(\d\d)`                                   | Yes          |                                                                                                                  |
+| Non capturing groups             | `(?:a\|b)c`                                       | Yes          |                                                                                                                  |
+| Lookahead groups                 | `a(?=b)`, `a(?!b)`                                | No           |                                                                                                                  |
+| Lookbehind groups                | `(?<=a)b`, `(?<!a)b`                              | No           |                                                                                                                  |
+| Atomic groups                    | `a(?>bc\|b)c`                                     | No           |                                                                                                                  |
+| Anchors                          |                                                   | No           | Parser will parse regular expression properly, but string generator will report that it does not support anchors |
+| Start and end of line            | `$abc^`,                                          | No           |                                                                                                                  |
+| Start and end of string          | `\Aabc\Z`                                         | No           |                                                                                                                  |
+| End of string only               | `abc\z`                                           | No           |                                                                                                                  |
+| Previous match                   | `\Gabc`                                           | No           |                                                                                                                  |
+| Word boundary                    | `.+\b.+`                                          | No           | `\b` correspond to backspace character when used in character class notation: `[\b]`                             |
+| Non word boundary                | `.+\B.+`                                          | No           |                                                                                                                  |
+
 ### Examples of usage
 
 | Use-case                                                                                       | Regular expression                                                | CLI command                                                                    | Output                                                                                                                                 |
