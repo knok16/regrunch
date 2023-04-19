@@ -36,7 +36,6 @@ class ParserTest {
         assertEquals(concatenation(symbol('a'), symbol('\t'), symbol('b')), parse("""a\tb"""))
         assertEquals(concatenation(symbol('a'), symbol('\r'), symbol('b')), parse("""a\rb"""))
         assertEquals(concatenation(symbol('a'), symbol('\n'), symbol('b')), parse("""a\nb"""))
-        assertEquals(concatenation(symbol('a'), symbol(0x0B.toChar()), symbol('b')), parse("""a\vb"""))
         assertEquals(concatenation(symbol('a'), symbol(0x07.toChar()), symbol('b')), parse("""a\ab"""))
         assertEquals(concatenation(symbol('a'), symbol(0x1B.toChar()), symbol('b')), parse("""a\eb"""))
         assertEquals(concatenation(symbol('a'), symbol(0x0C.toChar()), symbol('b')), parse("""a\fb"""))
@@ -47,11 +46,25 @@ class ParserTest {
         assertEquals(SetNotationSymbol(symbols('a', '\t', 'b')), parse("""[a\tb]"""))
         assertEquals(SetNotationSymbol(symbols('a', '\r', 'b')), parse("""[a\rb]"""))
         assertEquals(SetNotationSymbol(symbols('a', '\n', 'b')), parse("""[a\nb]"""))
-        assertEquals(SetNotationSymbol(symbols('a', 0x0B.toChar(), 'b')), parse("""[a\vb]"""))
         assertEquals(SetNotationSymbol(symbols('a', 0x07.toChar(), 'b')), parse("""[a\ab]"""))
         assertEquals(SetNotationSymbol(symbols('a', 0x08.toChar(), 'b')), parse("""[a\bb]"""))
         assertEquals(SetNotationSymbol(symbols('a', 0x1B.toChar(), 'b')), parse("""[a\eb]"""))
         assertEquals(SetNotationSymbol(symbols('a', 0x0C.toChar(), 'b')), parse("""[a\fb]"""))
+    }
+
+    @Test
+    fun verticalWhitespace() {
+        assertEquals(concatenation(symbol('a'), VerticalWhitespaceSymbol, symbol('b')), parse("""a\vb"""))
+        assertEquals(SetNotationSymbol(setOf(symbol('a'), VerticalWhitespaceSymbol, symbol('b'))), parse("""[a\vb]"""))
+    }
+
+    @Test
+    fun horizontalWhitespace() {
+        assertEquals(concatenation(symbol('a'), HorizontalWhitespaceSymbol, symbol('b')), parse("""a\hb"""))
+        assertEquals(
+            SetNotationSymbol(setOf(symbol('a'), HorizontalWhitespaceSymbol, symbol('b'))),
+            parse("""[a\hb]""")
+        )
     }
 
     @Test

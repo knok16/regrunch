@@ -29,6 +29,8 @@ object DigitSymbol : Symbol
 object NonDigitSymbol : Symbol
 object WhitespaceSymbol : Symbol
 object NonWhitespaceSymbol : Symbol
+object VerticalWhitespaceSymbol : Symbol
+object HorizontalWhitespaceSymbol : Symbol
 object WordSymbol : Symbol
 object NonWordSymbol : Symbol
 data class SetNotationSymbol(val symbols: Set<Symbol>, val negated: Boolean = false) : Symbol

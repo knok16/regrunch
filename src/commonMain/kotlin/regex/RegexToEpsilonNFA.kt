@@ -5,6 +5,7 @@ import epsilonnfa.EpsilonNFA
 import epsilonnfa.EpsilonNFABuilder
 import epsilonnfa.newFinalState
 import epsilonnfa.transition
+import kotlin.text.CharCategory.SPACE_SEPARATOR
 
 internal fun Char.isWordChar(): Boolean = category in setOf(
     CharCategory.LOWERCASE_LETTER,
@@ -27,6 +28,17 @@ internal fun Symbol.convertToChars(alphabet: Set<Char>): Set<Char> = when (this)
     is NonDigitSymbol -> alphabet.filterNot { it.isDigit() }.toSet()
     is WhitespaceSymbol -> alphabet.filter { it.isWhitespace() }.toSet()
     is NonWhitespaceSymbol -> alphabet.filterNot { it.isWhitespace() }.toSet()
+    is VerticalWhitespaceSymbol -> alphabet intersect setOf(
+        '\n',
+        0x0B.toChar(), // vertical tab
+        0x0C.toChar(), // form feed
+        '\r',
+        0x85.toChar(),
+        0x2028.toChar(),
+        0x2029.toChar()
+    )
+
+    is HorizontalWhitespaceSymbol -> alphabet.filter { it == '\t' || it.category == SPACE_SEPARATOR }.toSet()
     is WordSymbol -> alphabet.filter { it.isWordChar() }.toSet()
     is NonWordSymbol -> alphabet.filterNot { it.isWordChar() }.toSet()
     is SetNotationSymbol -> {

@@ -18,6 +18,8 @@ fun extractAlphabet(regexPart: RegexPart): Set<Char> = when (regexPart) {
     is NonDigitSymbol -> throw error("non-digit symbol")
     is WhitespaceSymbol -> throw error("whitespace symbol")
     is NonWhitespaceSymbol -> throw error("non-whitespace symbol")
+    is VerticalWhitespaceSymbol -> throw error("vertical whitespace symbol")
+    is HorizontalWhitespaceSymbol -> throw error("horizontal whitespace symbol")
     is WordSymbol -> throw error("word symbol")
     is NonWordSymbol -> throw error("non-word symbol")
 

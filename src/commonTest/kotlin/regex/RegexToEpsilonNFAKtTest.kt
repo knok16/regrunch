@@ -12,7 +12,7 @@ private fun concatenation(vararg parts: RegexPart) = Concatenation(parts.toList(
 private fun union(vararg parts: RegexPart) = Union(parts.toSet())
 
 class RegexToEpsilonNFAKtTest {
-    private val asciiAlphabet = (0..127).map { it.toChar() }.toSet()
+    private val asciiAlphabet = (0..0x7F).map { it.toChar() }.toSet()
 
     @Test
     fun isWordChar() {
@@ -120,6 +120,40 @@ class RegexToEpsilonNFAKtTest {
                 epsilonTransition(b, newFinalState())
             },
             WordSymbol.toEpsilonNFA(asciiAlphabet)
+        )
+    }
+
+    @Test
+    fun verticalWhitespaceSymbol() {
+        assertEquals(
+            epsilonNFA(asciiAlphabet) {
+                val a = newState()
+                val b = newState()
+
+                for (symbol in setOf('\n', 0x0B.toChar(), 0x0C.toChar(), '\r'))
+                    transition(a, b, symbol)
+
+                epsilonTransition(startState, a)
+                epsilonTransition(b, newFinalState())
+            },
+            VerticalWhitespaceSymbol.toEpsilonNFA(asciiAlphabet)
+        )
+    }
+
+    @Test
+    fun horizontalWhitespaceSymbol() {
+        assertEquals(
+            epsilonNFA(asciiAlphabet) {
+                val a = newState()
+                val b = newState()
+
+                for (symbol in setOf('\t', ' '))
+                    transition(a, b, symbol)
+
+                epsilonTransition(startState, a)
+                epsilonTransition(b, newFinalState())
+            },
+            HorizontalWhitespaceSymbol.toEpsilonNFA(asciiAlphabet)
         )
     }
 

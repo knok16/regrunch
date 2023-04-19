@@ -49,7 +49,8 @@ private fun parseEscapedCharacter(reader: Reader, forSetNotation: Boolean): Symb
         't' -> ExactSymbol('\t')
         'r' -> ExactSymbol('\r')
         'n' -> ExactSymbol('\n')
-        'v' -> ExactSymbol(0x0B.toChar())
+        'v' -> VerticalWhitespaceSymbol
+        'h' -> HorizontalWhitespaceSymbol
         'a' -> ExactSymbol(0x07.toChar())
         'b' -> if (forSetNotation) ExactSymbol(0x08.toChar()) else WordBoundary
         'e' -> ExactSymbol(0x1B.toChar())
