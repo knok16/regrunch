@@ -7,5 +7,4 @@ expect class Stack<E>() {
     fun peek(): E
 }
 
-fun <T> Stack<T>.isEmpty(): Boolean = size == 0
 fun <T> Stack<T>.isNotEmpty(): Boolean = size > 0
