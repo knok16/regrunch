@@ -124,6 +124,23 @@ class RegexToEpsilonNFAKtTest {
     }
 
     @Test
+    fun anySymbol() {
+        assertEquals(
+            epsilonNFA(asciiAlphabet) {
+                val a = newState()
+                val b = newState()
+
+                for (digit in asciiAlphabet.filter { it != '\r' && it != '\n' })
+                    transition(a, b, digit)
+
+                epsilonTransition(startState, a)
+                epsilonTransition(b, newFinalState())
+            },
+            AnySymbol.toEpsilonNFA(asciiAlphabet)
+        )
+    }
+
+    @Test
     fun verticalWhitespaceSymbol() {
         assertEquals(
             epsilonNFA(asciiAlphabet) {

@@ -21,21 +21,26 @@ internal fun Char.isWordChar(): Boolean = category in setOf(
 // TODO move .toSet() at the end? Any performance ramifications?
 internal fun Symbol.convertToChars(alphabet: Set<Char>): Set<Char> = when (this) {
     is ExactSymbol -> setOf(value)
-    // TODO remove new lines (and possible any other characters that do not covered by . in regex)
-    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/dotAll
-    is AnySymbol -> alphabet
+    is AnySymbol -> alphabet - setOf(
+        '\n',           // Line Feed
+        '\r',           // Carriage Return
+        0x85.toChar(),  // Next Line
+        0x2028.toChar(),// Line Separator
+        0x2029.toChar() // Paragraph Separator
+    )
+
     is DigitSymbol -> alphabet.filter { it.isDigit() }.toSet()
     is NonDigitSymbol -> alphabet.filterNot { it.isDigit() }.toSet()
     is WhitespaceSymbol -> alphabet.filter { it.isWhitespace() }.toSet()
     is NonWhitespaceSymbol -> alphabet.filterNot { it.isWhitespace() }.toSet()
     is VerticalWhitespaceSymbol -> alphabet intersect setOf(
-        '\n',
-        0x0B.toChar(), // vertical tab
-        0x0C.toChar(), // form feed
-        '\r',
-        0x85.toChar(),
-        0x2028.toChar(),
-        0x2029.toChar()
+        '\n',           // Line Feed
+        0x0B.toChar(),  // Vertical Tab
+        0x0C.toChar(),  // Form Feed
+        '\r',           // Carriage Return
+        0x85.toChar(),  // Next Line
+        0x2028.toChar(),// Line Separator
+        0x2029.toChar() // Paragraph Separator
     )
 
     is HorizontalWhitespaceSymbol -> alphabet.filter { it == '\t' || it.category == SPACE_SEPARATOR }.toSet()
