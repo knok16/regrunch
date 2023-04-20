@@ -2,7 +2,7 @@ plugins {
     kotlin("multiplatform") version "1.8.10"
 }
 
-group = "com.knok16"
+group = "com.github.knok16.regrunch"
 version = "1.0-SNAPSHOT"
 
 repositories {
@@ -29,7 +29,7 @@ kotlin {
     nativeTarget.apply {
         binaries {
             executable {
-                entryPoint = "main"
+                entryPoint = "com.github.knok16.regrunch.main"
             }
         }
     }
