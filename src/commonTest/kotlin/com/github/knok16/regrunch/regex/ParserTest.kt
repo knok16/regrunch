@@ -191,7 +191,7 @@ class ParserTest {
             ParseException("No operand for repeat operator", 2)
         )
         assertException(
-            setOf("ab(*c)", "(((*", "(a(*", "a((*", "a*(*", "aa(*", "a|(*"),
+            setOf("ab(*)de", "ab(*c)", "(((*", "(a(*", "a((*", "a*(*", "aa(*", "a|(*"),
             ParseException("No operand for repeat operator", 3)
         )
     }
@@ -520,6 +520,18 @@ class ParserTest {
     @Test
     fun emptyBrackets() {
         assertEquals(concatenation("abcdef"), parse("""abc(?:)def"""))
+        assertEquals(
+            concatenation(symbol('a'), union(concatenation(), symbol('b')), symbol('c')),
+            parse("""a(?:|b)c""")
+        )
+        assertEquals(
+            concatenation(symbol('a'), union(symbol('b'), concatenation()), symbol('c')),
+            parse("""a(?:b|)c""")
+        )
+        assertEquals(
+            concatenation(symbol('a'), symbol('b'), symbol('d'), symbol('e')),
+            parse("""ab(?:|)de""")
+        )
         assertEquals(concatenation(), parse("""(?:)"""))
         assertEquals(concatenation(), parse("""(?:(?:(?:(?:)(?:))(?:)(?:(?:)(?:))))"""))
         assertEquals(concatenation(), parse("""(?:(?: ))"""))
