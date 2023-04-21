@@ -3,10 +3,7 @@ package com.github.knok16.regrunch.regex
 import com.github.knok16.regrunch.epsilonnfa.epsilonNFA
 import com.github.knok16.regrunch.epsilonnfa.newFinalState
 import com.github.knok16.regrunch.epsilonnfa.transition
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 private fun concatenation(vararg parts: RegexPart) = Concatenation(parts.toList())
 private fun union(vararg parts: RegexPart) = Union(parts.toSet())
@@ -489,6 +486,26 @@ class RegexToEpsilonNFAKtTest {
                 epsilonTransition(b, newFinalState())
             },
             DigitSymbol.toEpsilonNFA(alphabet)
+        )
+    }
+
+    @Test
+    fun anchorsAreNotSupported() {
+        assertEquals(
+            "Anchors are not supported",
+            assertFailsWith<IllegalArgumentException> {
+                concatenation(ExactSymbol('a'), WordBoundary, ExactSymbol(' ')).toEpsilonNFA(asciiAlphabet)
+            }.message
+        )
+    }
+
+    @Test
+    fun possessiveQuantifiersAreNotSupported() {
+        assertEquals(
+            "Possessive quantifiers are not supported",
+            assertFailsWith<IllegalArgumentException> {
+                Repeat(ExactSymbol('a'), 2, 5, Repeat.Type.POSSESSIVE).toEpsilonNFA(asciiAlphabet)
+            }.message
         )
     }
 }

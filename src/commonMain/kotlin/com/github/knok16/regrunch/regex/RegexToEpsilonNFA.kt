@@ -81,6 +81,9 @@ internal fun convert(regexPart: RegexPart, builder: EpsilonNFABuilder<Char>, alp
             }
 
         is Repeat -> {
+            if (regexPart.type == Repeat.Type.POSSESSIVE)
+                throw IllegalArgumentException("Possessive quantifiers are not supported")
+
             val start = builder.newState()
             val finish = builder.newState()
 
