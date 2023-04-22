@@ -9,12 +9,14 @@ fun <S> DFA<Char, S>.allStringsAlphabetically(): Sequence<String> = sequence {
     var prefix = CharArray(100)
     val deadStates = deadStates()
     val alphabetSorted = alphabet.sorted()
+    val viableTransitions = mutableMapOf<S, List<Pair<Char, S>>>()
 
     fun getIteratorFor(state: S): Iterator<Pair<Char, S>> =
-        alphabetSorted
-            .map { symbol -> symbol to transition(state, symbol) }
-            .filter { (_, nextState) -> nextState !in deadStates }
-            .iterator()
+        viableTransitions.getOrPut(state) {
+            alphabetSorted
+                .map { symbol -> symbol to transition(state, symbol) }
+                .filter { (_, nextState) -> nextState !in deadStates }
+        }.iterator()
 
     callstack.push(getIteratorFor(startState))
 
