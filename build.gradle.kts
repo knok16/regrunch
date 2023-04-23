@@ -1,5 +1,5 @@
 plugins {
-    kotlin("multiplatform") version "1.8.10"
+    kotlin("multiplatform") version "1.8.20"
 }
 
 group = "com.github.knok16.regrunch"
@@ -12,7 +12,6 @@ repositories {
 kotlin {
     jvm {
         jvmToolchain(11)
-        withJava()
         testRuns["test"].executionTask.configure {
             useJUnitPlatform()
         }
