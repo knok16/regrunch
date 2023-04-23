@@ -29,6 +29,7 @@ kotlin {
         binaries {
             executable {
                 entryPoint = "com.github.knok16.regrunch.main"
+                if (isMingwX64) linkerOpts("libs/CRT_noglob.o")
             }
         }
     }
