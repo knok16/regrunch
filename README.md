@@ -19,6 +19,25 @@ The wordlists are created through converting passed regex into deterministic fin
 that it accepts.
 Additionally, to regex you can determine the amount of characters and set of characters.
 
+### How to build
+
+#### Prerequisites
+
+Regrunch uses [gradle](https://gradle.org/install/) as build tool. Gradle wrapper goes with project, as result it
+requires only a Java JDK version 8 or higher to be installed.
+
+#### Build Instruction
+
+```
+git clone --depth 1 --branch latest-release https://github.com/knok16/regrunch.git
+cd regrunch
+./gradlew linkReleaseExecutableNative
+cp ./build/bin/native/releaseExecutable/regrunch.kexe regrunch
+./regrunch --help
+```
+
+### Basic help
+
 ```
 $ ./regrunch --help   
 Usage: regrunch [OPTIONS] REGEX
