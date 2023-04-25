@@ -21,8 +21,8 @@ import com.github.knok16.regrunch.regex.extractAlphabet
 import com.github.knok16.regrunch.regex.parse
 import com.github.knok16.regrunch.regex.toEpsilonNFA
 
-private val asciiAlphabet = (0x01..0x7F).map { it.toChar() }.toSet()
-private val printableAsciiAlphabet = (0x20..0x7F).map { it.toChar() }.toSet()
+private val asciiAlphabet = (0x00..0x7F).map { it.toChar() }.toSet()
+private val printableAsciiAlphabet = (0x20..0x7E).map { it.toChar() }.toSet()
 
 // TODO improve help strings, check grammar
 class Regrunch : CliktCommand("Generate strings from regex") {
