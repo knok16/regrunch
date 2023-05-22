@@ -1145,8 +1145,9 @@ class ParserTest {
 
     @Test
     fun crossTestWithKotlinParser() {
+        val alphabetContext = AlphabetContext(setOf('(', ')', '*', '|') + ('a'..'z').toSet())
         parse("""[()*?|a\\]{0,5}""")
-            .toEpsilonNFA(setOf('(', ')', '*', '|') + ('a'..'z').toSet())
+            .toEpsilonNFA(alphabetContext)
             .toNFA()
             .toDFA()
             .allStringsAlphabetically()

@@ -3,72 +3,17 @@ package com.github.knok16.regrunch.regex
 import com.github.knok16.regrunch.epsilonnfa.epsilonNFA
 import com.github.knok16.regrunch.epsilonnfa.newFinalState
 import com.github.knok16.regrunch.epsilonnfa.transition
+import com.github.knok16.regrunch.regex.AlphabetContext.Companion.ASCII
 import kotlin.test.*
 
 private fun concatenation(vararg parts: RegexPart) = Concatenation(parts.toList())
 private fun union(vararg parts: RegexPart) = Union(parts.toSet())
 
 class RegexToEpsilonNFAKtTest {
-    private val asciiAlphabet = (0..0x7F).map { it.toChar() }.toSet()
-
-    @Test
-    fun isWordChar() {
-        assertFalse('\t'.isWordChar())
-        assertFalse(' '.isWordChar())
-        assertFalse('!'.isWordChar())
-        assertFalse('('.isWordChar())
-        assertFalse('*'.isWordChar())
-        assertFalse('-'.isWordChar())
-        assertFalse('.'.isWordChar())
-        assertFalse('/'.isWordChar())
-        assertFalse(';'.isWordChar())
-        assertFalse(':'.isWordChar())
-        assertFalse('<'.isWordChar())
-        assertFalse('='.isWordChar())
-        assertFalse('>'.isWordChar())
-        assertFalse('?'.isWordChar())
-        assertFalse('@'.isWordChar())
-        assertFalse('['.isWordChar())
-        assertFalse('\\'.isWordChar())
-        assertFalse(']'.isWordChar())
-        assertFalse('^'.isWordChar())
-        assertFalse('`'.isWordChar())
-        assertFalse('{'.isWordChar())
-        assertFalse('|'.isWordChar())
-        assertFalse('}'.isWordChar())
-        assertFalse('~'.isWordChar())
-
-        assertTrue('1'.isWordChar())
-        assertTrue('5'.isWordChar())
-        assertTrue('0'.isWordChar())
-        assertTrue('A'.isWordChar())
-        assertTrue('G'.isWordChar())
-        assertTrue('R'.isWordChar())
-        assertTrue('S'.isWordChar())
-        assertTrue('Z'.isWordChar())
-        assertTrue('_'.isWordChar())
-        assertTrue('a'.isWordChar())
-        assertTrue('f'.isWordChar())
-        assertTrue('k'.isWordChar())
-        assertTrue('u'.isWordChar())
-
-        assertTrue('ა'.isWordChar())
-        assertTrue('ბ'.isWordChar())
-        assertTrue('გ'.isWordChar())
-        assertTrue('ზ'.isWordChar())
-        assertTrue('ჯ'.isWordChar())
-
-        assertTrue('١'.isWordChar())
-        assertTrue('٢'.isWordChar())
-        assertTrue('٣'.isWordChar())
-        assertTrue('٤'.isWordChar())
-        assertTrue('٥'.isWordChar())
-    }
-
     @Test
     fun singleSymbol() {
         assertEquals(
-            epsilonNFA(asciiAlphabet) {
+            epsilonNFA(ASCII.alphabet) {
                 val a = newState()
                 val b = newState()
 
@@ -77,14 +22,14 @@ class RegexToEpsilonNFAKtTest {
 
                 epsilonTransition(b, newFinalState())
             },
-            ExactSymbol('a').toEpsilonNFA(asciiAlphabet)
+            ExactSymbol('a').toEpsilonNFA(ASCII)
         )
     }
 
     @Test
     fun digitSymbol() {
         assertEquals(
-            epsilonNFA(asciiAlphabet) {
+            epsilonNFA(ASCII.alphabet) {
                 val a = newState()
                 val b = newState()
 
@@ -94,14 +39,14 @@ class RegexToEpsilonNFAKtTest {
 
                 epsilonTransition(b, newFinalState())
             },
-            DigitSymbol.toEpsilonNFA(asciiAlphabet)
+            DigitSymbol.toEpsilonNFA(ASCII)
         )
     }
 
     @Test
     fun wordSymbol() {
         assertEquals(
-            epsilonNFA(asciiAlphabet) {
+            epsilonNFA(ASCII.alphabet) {
                 val a = newState()
                 val b = newState()
 
@@ -116,31 +61,31 @@ class RegexToEpsilonNFAKtTest {
 
                 epsilonTransition(b, newFinalState())
             },
-            WordSymbol.toEpsilonNFA(asciiAlphabet)
+            WordSymbol.toEpsilonNFA(ASCII)
         )
     }
 
     @Test
     fun anySymbol() {
         assertEquals(
-            epsilonNFA(asciiAlphabet) {
+            epsilonNFA(ASCII.alphabet) {
                 val a = newState()
                 val b = newState()
 
-                for (digit in asciiAlphabet.filter { it != '\r' && it != '\n' })
+                for (digit in ASCII.alphabet.filter { it != '\r' && it != '\n' })
                     transition(a, b, digit)
 
                 epsilonTransition(startState, a)
                 epsilonTransition(b, newFinalState())
             },
-            AnySymbol.toEpsilonNFA(asciiAlphabet)
+            AnySymbol.toEpsilonNFA(ASCII)
         )
     }
 
     @Test
     fun verticalWhitespaceSymbol() {
         assertEquals(
-            epsilonNFA(asciiAlphabet) {
+            epsilonNFA(ASCII.alphabet) {
                 val a = newState()
                 val b = newState()
 
@@ -150,14 +95,14 @@ class RegexToEpsilonNFAKtTest {
                 epsilonTransition(startState, a)
                 epsilonTransition(b, newFinalState())
             },
-            VerticalWhitespaceSymbol.toEpsilonNFA(asciiAlphabet)
+            VerticalWhitespaceSymbol.toEpsilonNFA(ASCII)
         )
     }
 
     @Test
     fun horizontalWhitespaceSymbol() {
         assertEquals(
-            epsilonNFA(asciiAlphabet) {
+            epsilonNFA(ASCII.alphabet) {
                 val a = newState()
                 val b = newState()
 
@@ -167,14 +112,14 @@ class RegexToEpsilonNFAKtTest {
                 epsilonTransition(startState, a)
                 epsilonTransition(b, newFinalState())
             },
-            HorizontalWhitespaceSymbol.toEpsilonNFA(asciiAlphabet)
+            HorizontalWhitespaceSymbol.toEpsilonNFA(ASCII)
         )
     }
 
     @Test
     fun concatenation() {
         assertEquals(
-            epsilonNFA(asciiAlphabet) {
+            epsilonNFA(ASCII.alphabet) {
                 val a = newState()
                 val b = newState()
                 transition(a, b, 'a')
@@ -197,14 +142,14 @@ class RegexToEpsilonNFAKtTest {
                 ExactSymbol('a'),
                 DigitSymbol,
                 ExactSymbol('b')
-            ).toEpsilonNFA(asciiAlphabet)
+            ).toEpsilonNFA(ASCII)
         )
     }
 
     @Test
     fun emptyConcatenation() {
         assertEquals(
-            epsilonNFA(asciiAlphabet) {
+            epsilonNFA(ASCII.alphabet) {
                 val a = newState()
                 val b = newState()
                 epsilonTransition(a, b)
@@ -212,14 +157,14 @@ class RegexToEpsilonNFAKtTest {
                 epsilonTransition(startState, a)
                 epsilonTransition(b, newFinalState())
             },
-            Concatenation(emptyList()).toEpsilonNFA(asciiAlphabet)
+            Concatenation(emptyList()).toEpsilonNFA(ASCII)
         )
     }
 
     @Test
     fun union() {
         assertEquals(
-            epsilonNFA(asciiAlphabet) {
+            epsilonNFA(ASCII.alphabet) {
                 val g = newState()
                 val h = newState()
 
@@ -250,21 +195,21 @@ class RegexToEpsilonNFAKtTest {
                 ExactSymbol('1'),
                 DigitSymbol,
                 ExactSymbol('b')
-            ).toEpsilonNFA(asciiAlphabet)
+            ).toEpsilonNFA(ASCII)
         )
     }
 
     @Test
     fun emptyUnion() {
         assertEquals(
-            epsilonNFA(asciiAlphabet) {
+            epsilonNFA(ASCII.alphabet) {
                 val a = newState()
                 val b = newState()
 
                 epsilonTransition(startState, a)
                 epsilonTransition(b, newFinalState())
             },
-            Union(emptySet()).toEpsilonNFA(asciiAlphabet)
+            Union(emptySet()).toEpsilonNFA(ASCII)
         )
     }
 
@@ -272,7 +217,7 @@ class RegexToEpsilonNFAKtTest {
     @Test
     fun optional() {
         assertEquals(
-            epsilonNFA(asciiAlphabet) {
+            epsilonNFA(ASCII.alphabet) {
                 val c = newState()
                 val d = newState()
 
@@ -291,14 +236,14 @@ class RegexToEpsilonNFAKtTest {
                 ExactSymbol('a'),
                 0,
                 1
-            ).toEpsilonNFA(asciiAlphabet)
+            ).toEpsilonNFA(ASCII)
         )
     }
 
     @Test
     fun exactRepeats() {
         assertEquals(
-            epsilonNFA(asciiAlphabet) {
+            epsilonNFA(ASCII.alphabet) {
                 val g = newState()
                 val h = newState()
 
@@ -326,14 +271,14 @@ class RegexToEpsilonNFAKtTest {
                 ExactSymbol('a'),
                 3,
                 3
-            ).toEpsilonNFA(asciiAlphabet)
+            ).toEpsilonNFA(ASCII)
         )
     }
 
     @Test
     fun rangeRepeat() {
         assertEquals(
-            epsilonNFA(asciiAlphabet) {
+            epsilonNFA(ASCII.alphabet) {
                 val g = newState()
                 val h = newState()
 
@@ -366,14 +311,14 @@ class RegexToEpsilonNFAKtTest {
                 ExactSymbol('a'),
                 1,
                 3
-            ).toEpsilonNFA(asciiAlphabet)
+            ).toEpsilonNFA(ASCII)
         )
     }
 
     @Test
     fun repeatAtLeast2() {
         assertEquals(
-            epsilonNFA(asciiAlphabet) {
+            epsilonNFA(ASCII.alphabet) {
                 val a = newState()
                 val b = newState()
 
@@ -408,14 +353,14 @@ class RegexToEpsilonNFAKtTest {
                 ExactSymbol('a'),
                 2,
                 null
-            ).toEpsilonNFA(asciiAlphabet)
+            ).toEpsilonNFA(ASCII)
         )
     }
 
     @Test
     fun kleeneStar() {
         assertEquals(
-            epsilonNFA(asciiAlphabet) {
+            epsilonNFA(ASCII.alphabet) {
                 val a = newState()
                 val b = newState()
 
@@ -440,7 +385,7 @@ class RegexToEpsilonNFAKtTest {
                 ExactSymbol('a'),
                 0,
                 null
-            ).toEpsilonNFA(asciiAlphabet)
+            ).toEpsilonNFA(ASCII)
         )
     }
 
@@ -461,13 +406,13 @@ class RegexToEpsilonNFAKtTest {
                 epsilonTransition(startState, a)
                 epsilonTransition(b, newFinalState())
             },
-            WordSymbol.toEpsilonNFA(alphabet)
+            WordSymbol.toEpsilonNFA(AlphabetContext(alphabet))
         )
     }
 
     @Test
     fun nonStandardAlphabet2() {
-        val alphabet = asciiAlphabet + setOf('١', '٢', '٣', '٤', '٥')
+        val alphabet = ASCII.alphabet + setOf('١', '٢', '٣', '٤', '٥')
 
         assertEquals(
             epsilonNFA(alphabet) {
@@ -485,7 +430,7 @@ class RegexToEpsilonNFAKtTest {
 
                 epsilonTransition(b, newFinalState())
             },
-            DigitSymbol.toEpsilonNFA(alphabet)
+            DigitSymbol.toEpsilonNFA(AlphabetContext(alphabet))
         )
     }
 
@@ -494,7 +439,7 @@ class RegexToEpsilonNFAKtTest {
         assertEquals(
             "Anchors are not supported",
             assertFailsWith<IllegalArgumentException> {
-                concatenation(ExactSymbol('a'), WordBoundary, ExactSymbol(' ')).toEpsilonNFA(asciiAlphabet)
+                concatenation(ExactSymbol('a'), WordBoundary, ExactSymbol(' ')).toEpsilonNFA(ASCII)
             }.message
         )
     }
@@ -504,7 +449,7 @@ class RegexToEpsilonNFAKtTest {
         assertEquals(
             "Possessive quantifiers are not supported",
             assertFailsWith<IllegalArgumentException> {
-                Repeat(ExactSymbol('a'), 2, 5, Repeat.Type.POSSESSIVE).toEpsilonNFA(asciiAlphabet)
+                Repeat(ExactSymbol('a'), 2, 5, Repeat.Type.POSSESSIVE).toEpsilonNFA(ASCII)
             }.message
         )
     }

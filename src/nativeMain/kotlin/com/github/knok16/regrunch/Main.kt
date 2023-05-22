@@ -16,14 +16,7 @@ import com.github.knok16.regrunch.dfa.intersect
 import com.github.knok16.regrunch.dfa.isLanguageInfinite
 import com.github.knok16.regrunch.epsilonnfa.toNFA
 import com.github.knok16.regrunch.nfa.toDFA
-import com.github.knok16.regrunch.regex.ParseException
-import com.github.knok16.regrunch.regex.extractAlphabet
-import com.github.knok16.regrunch.regex.parse
-import com.github.knok16.regrunch.regex.toEpsilonNFA
-
-private fun IntRange.toAlphabet(): Set<Char> = map { it.toChar() }.toSet()
-
-private val printableAsciiAlphabet = (0x20..0x7E).toAlphabet()
+import com.github.knok16.regrunch.regex.*
 
 class Regrunch : CliktCommand("Generate strings from regex") {
     private val regex by argument(help = "Regex to generate strings")
@@ -38,8 +31,8 @@ class Regrunch : CliktCommand("Generate strings from regex") {
             "--alphabet", "-a",
             help = "Symbols set used for string generation"
         ).choice(
-            "ascii" to (0x00..0x7F).toAlphabet(),
-            "ascii-printable" to printableAsciiAlphabet,
+            "ascii" to AlphabetContext.ASCII.alphabet,
+            "ascii-printable" to AlphabetContext.PRINTABLE_ASCII.alphabet,
             "ascii-digits" to ('0'..'9').toSet()
         ),
         option(
@@ -65,10 +58,10 @@ class Regrunch : CliktCommand("Generate strings from regex") {
         val alphabet = alphabet ?: try {
             extractAlphabet(regex)
         } catch (e: IllegalArgumentException) {
-            printableAsciiAlphabet
+            AlphabetContext.PRINTABLE_ASCII.alphabet
         }
 
-        val dfa = regex.toEpsilonNFA(alphabet).toNFA().toDFA().let { dfa ->
+        val dfa = regex.toEpsilonNFA(AlphabetContext(alphabet)).toNFA().toDFA().let { dfa ->
             maxLength?.let { dfa intersect anyStringOfLengthUpTo(alphabet, it) } ?: dfa
         }
 

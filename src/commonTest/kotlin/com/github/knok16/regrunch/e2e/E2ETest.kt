@@ -8,6 +8,7 @@ import com.github.knok16.regrunch.dfa.allStringsAlphabetically
 import com.github.knok16.regrunch.dfa.languageSize
 import com.github.knok16.regrunch.epsilonnfa.toNFA
 import com.github.knok16.regrunch.nfa.toDFA
+import com.github.knok16.regrunch.regex.AlphabetContext
 import com.github.knok16.regrunch.regex.parse
 import com.github.knok16.regrunch.regex.toEpsilonNFA
 import com.github.knok16.regrunch.utils.toBigInteger
@@ -16,10 +17,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class E2ETest {
-    private val asciiAlphabet = (0x20..0x7F).map { it.toChar() }.toSet()
-
     private fun dfa(pattern: String): DFA<Char, State> =
-        parse(pattern).toEpsilonNFA(asciiAlphabet).toNFA().toDFA()
+        parse(pattern).toEpsilonNFA(AlphabetContext.PRINTABLE_ASCII).toNFA().toDFA()
 
     @Test
     fun smokeTest() {
@@ -172,7 +171,7 @@ class E2ETest {
             dfa("""abc[]""").allStringsAlphabetically().toList()
         )
         assertEquals(
-            asciiAlphabet.map { "abc$it" },
+            AlphabetContext.PRINTABLE_ASCII.alphabet.map { "abc$it" },
             dfa("""abc[^]""").allStringsAlphabetically().toList()
         )
     }

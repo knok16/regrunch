@@ -3,6 +3,7 @@ package com.github.knok16.regrunch.e2e
 import com.github.knok16.regrunch.dfa.languageSize
 import com.github.knok16.regrunch.epsilonnfa.toNFA
 import com.github.knok16.regrunch.nfa.toDFA
+import com.github.knok16.regrunch.regex.AlphabetContext
 import com.github.knok16.regrunch.regex.parse
 import com.github.knok16.regrunch.regex.toEpsilonNFA
 import org.junit.jupiter.api.Test
@@ -99,7 +100,7 @@ class AdditionalE2ETest {
                                 |[01]{252}
                                 |[01]{254,255}
                             """
-                ).toEpsilonNFA(setOf('0', '1')).toNFA().toDFA()
+                ).toEpsilonNFA(AlphabetContext(setOf('0', '1'))).toNFA().toDFA()
             )
         )
     }

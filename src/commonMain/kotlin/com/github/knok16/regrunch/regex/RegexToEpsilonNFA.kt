@@ -5,69 +5,25 @@ import com.github.knok16.regrunch.epsilonnfa.EpsilonNFA
 import com.github.knok16.regrunch.epsilonnfa.EpsilonNFABuilder
 import com.github.knok16.regrunch.epsilonnfa.newFinalState
 import com.github.knok16.regrunch.epsilonnfa.transition
-import kotlin.text.CharCategory.SPACE_SEPARATOR
 
-internal fun Char.isWordChar(): Boolean = category in setOf(
-    CharCategory.LOWERCASE_LETTER,
-    CharCategory.UPPERCASE_LETTER,
-    CharCategory.TITLECASE_LETTER,
-    CharCategory.OTHER_LETTER,
-    CharCategory.MODIFIER_LETTER,
-    CharCategory.NON_SPACING_MARK,
-    CharCategory.DECIMAL_DIGIT_NUMBER,
-    CharCategory.CONNECTOR_PUNCTUATION
-)
-
-// TODO move .toSet() at the end? Any performance ramifications?
-internal fun Symbol.convertToChars(alphabet: Set<Char>): Set<Char> = when (this) {
-    is ExactSymbol -> setOf(value)
-    is AnySymbol -> alphabet - setOf(
-        '\n',           // Line Feed
-        '\r',           // Carriage Return
-        0x85.toChar(),  // Next Line
-        0x2028.toChar(),// Line Separator
-        0x2029.toChar() // Paragraph Separator
-    )
-
-    is DigitSymbol -> alphabet.filter { it.isDigit() }.toSet()
-    is NonDigitSymbol -> alphabet.filterNot { it.isDigit() }.toSet()
-    is WhitespaceSymbol -> alphabet.filter { it.isWhitespace() }.toSet()
-    is NonWhitespaceSymbol -> alphabet.filterNot { it.isWhitespace() }.toSet()
-    is VerticalWhitespaceSymbol -> alphabet intersect setOf(
-        '\n',           // Line Feed
-        0x0B.toChar(),  // Vertical Tab
-        0x0C.toChar(),  // Form Feed
-        '\r',           // Carriage Return
-        0x85.toChar(),  // Next Line
-        0x2028.toChar(),// Line Separator
-        0x2029.toChar() // Paragraph Separator
-    )
-
-    is HorizontalWhitespaceSymbol -> alphabet.filter { it == '\t' || it.category == SPACE_SEPARATOR }.toSet()
-    is WordSymbol -> alphabet.filter { it.isWordChar() }.toSet()
-    is NonWordSymbol -> alphabet.filterNot { it.isWordChar() }.toSet()
-    is SetNotationSymbol -> {
-        val symbols = symbols.flatMap { it.convertToChars(alphabet) }.toSet()
-        if (negated) alphabet - symbols else symbols
-    }
-
-    is Anchor -> throw IllegalArgumentException("Anchors are not supported")
-}
-
-internal fun convert(regexPart: RegexPart, builder: EpsilonNFABuilder<Char>, alphabet: Set<Char>): Pair<State, State> {
+internal fun convert(
+    regexPart: RegexPart,
+    builder: EpsilonNFABuilder<Char>,
+    alphabetContext: AlphabetContext
+): Pair<State, State> {
     return when (regexPart) {
         is Symbol -> {
             val start = builder.newState()
             val finish = builder.newState()
 
-            regexPart.convertToChars(alphabet).forEach {
+            alphabetContext.convertToChars(regexPart).forEach {
                 builder.transition(start, finish, it)
             }
             start to finish
         }
 
         is Concatenation -> regexPart.parts
-            .map { convert(it, builder, alphabet) }
+            .map { convert(it, builder, alphabetContext) }
             .takeIf { it.isNotEmpty() }
             ?.reduce { (a, b), (c, d) ->
                 builder.epsilonTransition(b, c)
@@ -88,7 +44,7 @@ internal fun convert(regexPart: RegexPart, builder: EpsilonNFABuilder<Char>, alp
             val finish = builder.newState()
 
             val minRepeats = (1..regexPart.min).fold(start) { acc, _ ->
-                val (a, b) = convert(regexPart.part, builder, alphabet)
+                val (a, b) = convert(regexPart.part, builder, alphabetContext)
                 builder.epsilonTransition(acc, a)
                 b
             }
@@ -96,13 +52,13 @@ internal fun convert(regexPart: RegexPart, builder: EpsilonNFABuilder<Char>, alp
 
             if (regexPart.max != null) {
                 ((regexPart.min + 1)..regexPart.max).fold(minRepeats) { acc, _ ->
-                    val (a, b) = convert(regexPart.part, builder, alphabet)
+                    val (a, b) = convert(regexPart.part, builder, alphabetContext)
                     builder.epsilonTransition(acc, a)
                     builder.epsilonTransition(b, finish)
                     b
                 }
             } else {
-                val (a, b) = convert(regexPart.part, builder, alphabet)
+                val (a, b) = convert(regexPart.part, builder, alphabetContext)
 
                 val c = builder.newState()
                 val d = builder.newState()
@@ -122,7 +78,7 @@ internal fun convert(regexPart: RegexPart, builder: EpsilonNFABuilder<Char>, alp
             val finish = builder.newState()
 
             regexPart.parts.forEach { part ->
-                val (a, b) = convert(part, builder, alphabet)
+                val (a, b) = convert(part, builder, alphabetContext)
 
                 builder.epsilonTransition(start, a)
                 builder.epsilonTransition(b, finish)
@@ -131,14 +87,14 @@ internal fun convert(regexPart: RegexPart, builder: EpsilonNFABuilder<Char>, alp
             start to finish
         }
 
-        is CaptureGroup -> convert(regexPart.part, builder, alphabet)
+        is CaptureGroup -> convert(regexPart.part, builder, alphabetContext)
     }
 }
 
-fun RegexPart.toEpsilonNFA(alphabet: Set<Char>): EpsilonNFA<Char, State> {
-    val result = EpsilonNFABuilder(alphabet)
+fun RegexPart.toEpsilonNFA(alphabetContext: AlphabetContext): EpsilonNFA<Char, State> {
+    val result = EpsilonNFABuilder(alphabetContext.alphabet)
 
-    val (a, b) = convert(this, result, alphabet)
+    val (a, b) = convert(this, result, alphabetContext)
 
     result.epsilonTransition(result.startState, a)
     result.epsilonTransition(b, result.newFinalState())
