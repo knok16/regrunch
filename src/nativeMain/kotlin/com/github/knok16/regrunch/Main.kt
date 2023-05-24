@@ -5,6 +5,7 @@ import com.github.ajalt.clikt.core.PrintMessage
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.groups.mutuallyExclusiveOptions
 import com.github.ajalt.clikt.parameters.groups.single
+import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.transformAll
 import com.github.ajalt.clikt.parameters.types.choice
@@ -41,6 +42,11 @@ class Regrunch : CliktCommand("Generate strings from regex") {
         ).transformAll { values -> values.flatMap { it.toList() }.toSet() }
     ).single()
 
+    private val caseInsensitive by option(
+        "-i", "--case-insensitive",
+        help = "Enables/disables i (case insensitive) flag for regex"
+    ).flag("--case-sensitive", default = false, defaultForHelp = "disabled")
+
     override fun run() {
         val regex = try {
             parse(regex)
@@ -56,12 +62,22 @@ class Regrunch : CliktCommand("Generate strings from regex") {
         }
 
         val alphabet = alphabet ?: try {
-            extractAlphabet(regex)
+            extractAlphabet(regex).let {
+                if (caseInsensitive) {
+                    it.flatMap { char ->
+                        setOf(
+                            char.uppercaseChar(),
+                            char.lowercaseChar(),
+                            char.titlecaseChar()
+                        )
+                    }.toSet()
+                } else it
+            }
         } catch (e: IllegalArgumentException) {
             AlphabetContext.PRINTABLE_ASCII.alphabet
         }
 
-        val dfa = regex.toEpsilonNFA(AlphabetContext(alphabet)).toNFA().toDFA().let { dfa ->
+        val dfa = regex.toEpsilonNFA(AlphabetContext(alphabet, caseInsensitive)).toNFA().toDFA().let { dfa ->
             maxLength?.let { dfa intersect anyStringOfLengthUpTo(alphabet, it) } ?: dfa
         }
 

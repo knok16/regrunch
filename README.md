@@ -48,9 +48,12 @@ Options:
   -m, --max-length INT             Limits length of strings generated from
                                    regex, required in case regex defines
                                    infinite amount of strings
-  -a, --alphabet [ascii|printable-ascii]
+  -a, --alphabet [ascii|ascii-printable|ascii-digits]
                                    Symbols set used for string generation
   -s, --symbols TEXT               Symbols used for string generation
+  -i, --case-insensitive / --case-sensitive
+                                   Enables/disables i (case insensitive) flag
+                                   for regex
   -h, --help                       Show this message and exit
 
 Arguments:
@@ -130,3 +133,4 @@ Arguments:
 | All 6 bit masks                                                                                | `[01]{6}`                                                         | `./regrunch '[01]{6}'`                                                         | 000000<br/>000001<br/>000010<br/>000011<br/>...<br/>111110<br/>111111                                                                  |
 | All words with 4, 5 and 6 letters followed by 2 digits and 1 of special characters !, % or #   | `[a-zA-Z]{4,6}\d\d[!%#]`                                          | `./regrunch '[a-zA-Z]{4,6}\d\d[!%#]'`                                          | AAAA00!<br/>AAAA00#<br/>AAAA00%<br/>AAAA01!<br/>...<br/>zzzzzz99#<br/>zzzzzz99%                                                        |
 | All combination of character cases for word 'taylor' followed by 2 digits and exclamation mark | `[Tt][Aa][Yy][Ll][Oo][Rr][0-9]{2}!`                               | `./regrunch '[Tt][Aa][Yy][Ll][Oo][Rr][0-9]{2}!'`                               | TAYLOR00!<br/>TAYLOR01!<br/>TAYLOR02!<br/>TAYLOR03!<br/>...<br/>taYLOr55!<br/>...<br/>taylor98!<br/>taylor99!                          |
+| All combination of character cases for word 'taylor' followed by 2 digits and exclamation mark | `taylor[0-9]{2}!` with `i` flag                                   | `./regrunch -i 'taylor[0-9]{2}!'`                                              | TAYLOR00!<br/>TAYLOR01!<br/>TAYLOR02!<br/>TAYLOR03!<br/>...<br/>taYLOr55!<br/>...<br/>taylor98!<br/>taylor99!                          |

@@ -15,7 +15,10 @@ internal fun Char.isWordChar(): Boolean = category in setOf(
 
 private fun IntRange.toAlphabet(): Set<Char> = map { it.toChar() }.toSet()
 
-class AlphabetContext(val alphabet: Set<Char>) {
+class AlphabetContext(
+    val alphabet: Set<Char>,
+    val caseInsensitive: Boolean = false
+) {
     companion object {
         val ASCII = AlphabetContext((0x00..0x7F).toAlphabet())
         val PRINTABLE_ASCII = AlphabetContext((0x20..0x7E).toAlphabet())
@@ -60,7 +63,17 @@ class AlphabetContext(val alphabet: Set<Char>) {
     }
 
     fun convertToChars(symbol: Symbol): Set<Char> = when (symbol) {
-        is ExactSymbol -> if (symbol.value in alphabet) setOf(symbol.value) else emptySet()
+        is ExactSymbol -> when {
+            caseInsensitive -> setOf(
+                symbol.value.lowercaseChar(),
+                symbol.value.uppercaseChar(),
+                symbol.value.titlecaseChar()
+            ).filter { it in alphabet }.toSet()
+
+            symbol.value in alphabet -> setOf(symbol.value)
+            else -> emptySet()
+        }
+
         is AnySymbol -> anySymbol
         is DigitSymbol -> digitsPartition.first
         is NonDigitSymbol -> digitsPartition.second
