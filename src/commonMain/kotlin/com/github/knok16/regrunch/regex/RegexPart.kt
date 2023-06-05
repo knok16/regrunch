@@ -33,6 +33,8 @@ object VerticalWhitespaceSymbol : Symbol
 object HorizontalWhitespaceSymbol : Symbol
 object WordSymbol : Symbol
 object NonWordSymbol : Symbol
+data class WithUnicodeProperty(val property: String): Symbol
+data class WithoutUnicodeProperty(val property: String): Symbol
 data class SetNotationSymbol(val symbols: Set<Symbol>, val negated: Boolean = false) : Symbol
 
 sealed interface Anchor : Symbol

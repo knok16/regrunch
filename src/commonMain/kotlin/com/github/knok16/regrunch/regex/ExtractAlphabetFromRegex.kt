@@ -22,6 +22,8 @@ fun extractAlphabet(regexPart: RegexPart): Set<Char> = when (regexPart) {
     is HorizontalWhitespaceSymbol -> throw error("horizontal whitespace symbol")
     is WordSymbol -> throw error("word symbol")
     is NonWordSymbol -> throw error("non-word symbol")
+    is WithUnicodeProperty -> throw error("characters with unicode property '${regexPart.property}'")
+    is WithoutUnicodeProperty -> throw error("characters without unicode property '${regexPart.property}'")
 
     is SetNotationSymbol -> if (!regexPart.negated) regexPart.symbols.flatMap { extractAlphabet(it) }.toSet()
     else throw IllegalArgumentException("Negated character class is used in regex, it is not possible to pinpoint exact symbol set that should be used")

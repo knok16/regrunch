@@ -1227,6 +1227,74 @@ class ParserTest {
         )
     }
 
+    @Test
+    fun symbolWithUnicodeProperty() {
+        assertEquals(WithUnicodeProperty("Line_Separator"), parse("""\p{Line_Separator}"""))
+        assertEquals(WithUnicodeProperty("L"), parse("""\p{L}"""))
+
+        assertEquals(
+            concatenation(WithUnicodeProperty("Line_Separator"), symbol('1')),
+            parse("""\p{Line_Separator}1""")
+        )
+        assertEquals(concatenation(WithUnicodeProperty("L"), symbol('2')), parse("""\p{L}2"""))
+    }
+
+    @Test
+    fun symbolWithoutUnicodeProperty() {
+        assertEquals(WithoutUnicodeProperty("Control"), parse("""\P{Control}"""))
+        assertEquals(WithoutUnicodeProperty("N"), parse("""\P{N}"""))
+    }
+
+    @Test
+    fun unicodePropertySymbolNoOpeningCurlyBrackets() {
+        assertEquals(
+            ParseException("Expected left curly bracket, but got 'N'", 2),
+            assertFailsWith<ParseException> { parse("""\pN}""") }
+        )
+        assertEquals(
+            ParseException("Expected left curly bracket, but got 'N'", 2),
+            assertFailsWith<ParseException> { parse("""\PN}""") }
+        )
+        assertEquals(
+            ParseException("Expected left curly bracket, but got end of input", 2),
+            assertFailsWith<ParseException> { parse("""\p""") }
+        )
+        assertEquals(
+            ParseException("Expected left curly bracket, but got end of input", 2),
+            assertFailsWith<ParseException> { parse("""\P""") }
+        )
+    }
+
+    @Test
+    fun unicodePropertySymbolEndsAbruptly() {
+        assertEquals(
+            ParseException("Unbalanced curly bracket", 2),
+            assertFailsWith<ParseException> { parse("""\p{""") }
+        )
+        assertEquals(
+            ParseException("Unbalanced curly bracket", 2),
+            assertFailsWith<ParseException> { parse("""\P{""") }
+        )
+
+        assertEquals(
+            ParseException("Unbalanced curly bracket", 2),
+            assertFailsWith<ParseException> { parse("""\p{Line""") }
+        )
+        assertEquals(
+            ParseException("Unbalanced curly bracket", 2),
+            assertFailsWith<ParseException> { parse("""\P{Line""") }
+        )
+
+        assertEquals(
+            ParseException("Unbalanced curly bracket", 2),
+            assertFailsWith<ParseException> { parse("""\p{Line_""") }
+        )
+        assertEquals(
+            ParseException("Unbalanced curly bracket", 2),
+            assertFailsWith<ParseException> { parse("""\P{Line_""") }
+        )
+    }
+
     private fun assertException(regexes: Set<String>, expectedException: Exception) = regexes.forEach { regex ->
         assertEquals(expectedException, assertFailsWith<ParseException> { parse(regex) })
         assertFailsWith<IllegalArgumentException> { Regex(regex).matches("") }

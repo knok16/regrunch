@@ -4,7 +4,7 @@ data class ParseException(override val message: String, val fromIndex: Int, val 
     constructor(message: String, at: Int) : this(message, at, at)
 }
 
-private class Reader(private val str: String) {
+private class Reader(val str: String) {
     private var i = 0
     fun next(): Char? = if (i < str.length) str[i++] else null
     fun peek(): Char? = if (i < str.length) str[i] else null
@@ -37,6 +37,19 @@ private fun Reader.readRepeatType(): Repeat.Type = when (peek()) {
     else -> Repeat.Type.GREEDY
 }
 
+private fun parseUnicodeProperty(reader: Reader): String {
+    val leftBracketIndex = reader.cursor()
+    return when (val leftBracket = reader.next()) {
+        '{' -> {
+            while ((reader.next() ?: throw ParseException("Unbalanced curly bracket", leftBracketIndex)) != '}');
+            reader.str.substring(leftBracketIndex + 1, reader.prevCursor())
+        }
+
+        null -> throw ParseException("Expected left curly bracket, but got end of input", leftBracketIndex)
+        else -> throw ParseException("Expected left curly bracket, but got '$leftBracket'", leftBracketIndex)
+    }
+}
+
 private fun parseEscapedCharacter(reader: Reader, forSetNotation: Boolean): Symbol =
     when (val char = reader.next()) {
         null -> throw ParseException("No character to escape", reader.prevCursor())
@@ -46,6 +59,8 @@ private fun parseEscapedCharacter(reader: Reader, forSetNotation: Boolean): Symb
         'S' -> NonWhitespaceSymbol
         'w' -> WordSymbol
         'W' -> NonWordSymbol
+        'p' -> WithUnicodeProperty(parseUnicodeProperty(reader))
+        'P' -> WithoutUnicodeProperty(parseUnicodeProperty(reader))
         't' -> ExactSymbol('\t')
         'r' -> ExactSymbol('\r')
         'n' -> ExactSymbol('\n')

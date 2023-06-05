@@ -83,6 +83,8 @@ class AlphabetContext(
         is HorizontalWhitespaceSymbol -> horizontalWhitespaces
         is WordSymbol -> wordCharactersPartition.first
         is NonWordSymbol -> wordCharactersPartition.second
+        is WithUnicodeProperty -> TODO("\\p is not supported")
+        is WithoutUnicodeProperty -> TODO("\\P is not supported")
         is SetNotationSymbol -> {
             val symbols = symbol.symbols.flatMap { convertToChars(it) }.toSet()
             if (symbol.negated) alphabet - symbols else symbols
