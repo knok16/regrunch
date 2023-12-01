@@ -28,12 +28,22 @@ requires only a Java JDK version 8 or higher to be installed.
 
 #### Build Instruction
 
+For linux:
 ```
 git clone --depth 1 --branch latest-release https://github.com/knok16/regrunch.git
 cd regrunch
-./gradlew linkReleaseExecutableNative
-cp ./build/bin/native/releaseExecutable/regrunch.kexe regrunch
+./gradlew linkReleaseExecutableLinuxX64
+cp ./build/bin/native/linuxX64/regrunch.kexe regrunch
 ./regrunch --help
+```
+
+For windows:
+```
+git clone --depth 1 --branch latest-release https://github.com/knok16/regrunch.git
+cd regrunch
+./gradlew linkReleaseExecutableMingwX64
+cp ./build/bin/mingwX64/releaseExecutable/regrunch.exe regrunch.exe
+./regrunch.exe --help
 ```
 
 ### Basic help

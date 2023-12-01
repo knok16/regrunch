@@ -2,9 +2,6 @@
 # See: https://circleci.com/docs/2.0/language-java/
 version: 2
 
-orbs:
-  gradle: circleci/gradle@7.4.2
-
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
 jobs:
@@ -38,7 +35,7 @@ jobs:
             # fallback to using the latest cache if no exact match is found
             - v1-dependencies-
 
-      - run: gradle dependencies
+      - run: ./gradlew dependencies
 
       - save_cache:
           paths:
@@ -46,9 +43,11 @@ jobs:
           key: v1-dependencies-{{ checksum "build.gradle.kts" }}
 
       # run tests!
-      - run: gradle check
+      - run: ./gradlew check
 
       - store_test_results:
           path: build/test-results/jvmTest
       - store_test_results:
-          path: build/test-results/nativeTest
+          path: build/test-results/mingwX64Test
+      - store_test_results:
+          path: build/test-results/linuxX64Test

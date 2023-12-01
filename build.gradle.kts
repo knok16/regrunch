@@ -1,9 +1,11 @@
+import org.jetbrains.kotlin.gradle.targets.jvm.tasks.KotlinJvmTest
+
 plugins {
-    kotlin("multiplatform") version "1.8.20"
+    kotlin("multiplatform") version "1.9.20"
 }
 
 group = "com.github.knok16.regrunch"
-version = "0.1.0-SNAPSHOT"
+version = "0.1.1-SNAPSHOT"
 
 repositories {
     mavenCentral()
@@ -12,47 +14,44 @@ repositories {
 kotlin {
     jvm {
         jvmToolchain(11)
-        testRuns["test"].executionTask.configure {
+        tasks.withType<KotlinJvmTest> {
             useJUnitPlatform()
         }
     }
-    val hostOs = System.getProperty("os.name")
-    val isMingwX64 = hostOs.startsWith("Windows")
-    val nativeTarget = when {
-        hostOs == "Mac OS X" -> if ("aarch64" in System.getProperty("os.arch")) {
-            macosArm64("native")
-        } else {
-            macosX64("native")
-        }
 
-        hostOs == "Linux" -> linuxX64("native")
-        isMingwX64 -> mingwX64("native")
-        else -> throw GradleException("Host OS is not supported in Kotlin/Native.")
-    }
-
-    nativeTarget.apply {
+    linuxX64 {
         binaries {
             executable {
                 entryPoint = "com.github.knok16.regrunch.main"
-                if (isMingwX64) linkerOpts("libs/CRT_noglob.o")
+            }
+        }
+    }
+
+    mingwX64 {
+        binaries {
+            executable {
+                entryPoint = "com.github.knok16.regrunch.main"
+                linkerOpts("libs/CRT_noglob.o")
             }
         }
     }
 
     sourceSets {
-        val commonMain by getting
-        val commonTest by getting {
+        commonTest {
             dependencies {
                 implementation(kotlin("test"))
             }
         }
-        val jvmMain by getting
-        val jvmTest by getting
-        val nativeMain by getting {
+        jvmTest {
+            dependencies {
+                implementation("org.junit.jupiter:junit-jupiter:5.9.2")
+                runtimeOnly("org.junit.platform:junit-platform-launcher")
+            }
+        }
+        nativeMain {
             dependencies {
                 implementation("com.github.ajalt.clikt:clikt:3.5.2")
             }
         }
-        val nativeTest by getting
     }
 }
